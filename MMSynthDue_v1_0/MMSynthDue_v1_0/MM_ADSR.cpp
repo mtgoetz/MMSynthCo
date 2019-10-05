@@ -1,12 +1,16 @@
 #include "MM_ADSR.h"
 #include <math.h>
+//#include <SoftwareSerial.h>
+#include <Arduino.h>
+
+//SoftwareSerial Serial(10, 11);
 
 MM_ADSR::MM_ADSR()	//default
 {
-	MM_ADSR(900, 400, 200, 500, 1, 4095);
+	MM_ADSR(900, 400, 200, 500, 0, 4095);
 }
 
-MM_ADSR::MM_ADSR(uint8_t outAddr)	//default with address
+MM_ADSR::MM_ADSR(uint8_t outAddr)	//default with output address
 {
 	MM_ADSR(900, 400, 200, 500, outAddr, 4095);
 }
@@ -16,55 +20,71 @@ MM_ADSR::MM_ADSR(int attack, int decay, int sustain, int release, uint8_t outAdd
 	MM_ADSR(attack, decay, sustain, release, outAddr, 4095);
 }
 
-MM_ADSR::MM_ADSR(int attack, int decay, int sustain, int release, uint8_t outAddr, int initial_gain)
+MM_ADSR::MM_ADSR(int attack, int decay, int sustain, int release, uint8_t outAddr, int gain)
 {
+	//Serial.begin(115200);
+
 	setAttack(attack);
 	setDecay(decay);
 	setSustain(sustain);
 	setRelease(release);
 
 	this->dacAddr = outAddr;
-	if (initial_gain > 4095) initial_gain = 4095;
-	this->max_level = initial_gain;			//max output to a dac.
+	if (gain > 4095) gain = 4095;
+	this->max_level = gain;			//max output to a dac.
 	this->phase = P_ATTACK;
 }
 
 int MM_ADSR::next()
 {
-	if (!env_active) return 0;
+	//if (!env_active) return 0;
+	if (!env_active && !loop_mode) return 0;
 
 	switch (phase)
 	{
 	case MM_ADSR::P_ATTACK:
 
-		if (output > (max_level - EPSILON))		//End of attack phase.
+		output += aInc;
+		if (output >= max_level - EPSILON)
 		{
-			phase = P_DECAY_SUSTAIN;
-			alpha = decay;
-			target_drive = sustain;
+			phase = P_DECAY;
 		}
 
 		break;
-	case MM_ADSR::P_DECAY_SUSTAIN:
+	case MM_ADSR::P_DECAY:
+
+		output -= dInc;
+
 		//if in loop mode reset to attack once hit 0 instead of sustain.
 		if (loop_mode)
 		{
-			if (output < (float)sustain + 1)
+			if (output < sustain + 1)
 			{
 				phase = P_ATTACK;
-				target_drive = max_level;
-				alpha = attack;
+			}
+		}
+		else
+		{
+			if (output <= sustain)
+			{
+				phase = P_SUSTAIN;
 			}
 		}
 		break;
+
+	case MM_ADSR::P_SUSTAIN:
+		//do nothing
+		break;
+
 	case MM_ADSR::P_RELEASE:
 
+		output -= rInc;
+
 		//if get to 0 switch env_active to false;
-		if (output < EPSILON)
+		if (output <= EPSILON)
 		{
 			env_active = false;
-			output = 0.0;
-			return 0;
+			output = 0;
 		}
 
 		break;
@@ -73,28 +93,26 @@ int MM_ADSR::next()
 		break;
 	}
 
-	output = ((1.0 - alpha) * target_drive + alpha * output);	//difeq: y(k) = (1 - alpha) * x(k) + alpha * y(k-1)	
-
-	return round(output);
+	return output;
 }
 
 void MM_ADSR::noteOn()
 {
 	//trigger = true;
 	env_active = true;
-	target_drive = max_level;	//drive to max during attack.
+	//target_drive = max_level;	//drive to max during attack.
 	phase = P_ATTACK;
-	alpha = attack;
+	//alpha = attack;
 
 }
 
 void MM_ADSR::noteOff()
 {
 	//trigger = false;
-	//env_active = false;
+	env_active = false;
 	phase = P_RELEASE;
-	alpha = release;
-	target_drive = 0;
+	//alpha = release;
+	//target_drive = 0;
 
 	//env_active = false;
 
@@ -119,15 +137,17 @@ void MM_ADSR::setGain(int gain)
 void MM_ADSR::setAttack(int attack)
 {
 	if (attack > 1023) attack = 1023;
-	this->attack = 0.999*cos((1023 - attack) / 795);
-	this->attack = sqrt(this->attack);
+	//this->attack = 0.999*cos((1023 - attack) / 795);
+	//this->attack = sqrt(this->attack);
+	this->aInc = map(attack, 0, 1023, 0, 255);
 }
 
 void MM_ADSR::setDecay(int decay)
 {
 	if (decay > 1023) decay = 1023;
-	this->decay = 0.999*cos((1023 - decay) / 795);
-	this->decay = sqrt(this->decay);
+	//this->decay = 0.999*cos((1023 - decay) / 795);
+	//this->decay = sqrt(this->decay);
+	this->dInc = map(decay, 0, 1023, 0, 255);
 }
 
 void MM_ADSR::setSustain(int sustain)
@@ -139,8 +159,9 @@ void MM_ADSR::setSustain(int sustain)
 void MM_ADSR::setRelease(int release)
 {
 	if (release > 1023) release = 1023;
-	this->release = 0.999*cos((1023 - release) / 795);
-	this->release = sqrt(this->release);
+	//this->release = 0.999*cos((1023 - release) / 795);
+	//this->release = sqrt(this->release);
+	this->rInc = map(release, 0, 1023, 0, 255);
 }
 
 void MM_ADSR::setLevels(int attack, int decay, int sustain, int release)
