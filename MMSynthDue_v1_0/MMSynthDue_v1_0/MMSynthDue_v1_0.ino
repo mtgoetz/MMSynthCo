@@ -11,8 +11,6 @@
 //#define main
 #define dactest
 
-#ifdef main
-
 #include "MM_ADSR.h"
 #include "Modulator.h"
 #include <SPI.h>
@@ -25,8 +23,13 @@
 
 const int slaveSelectPin = 9;
 
+#ifdef main
+
 Modulator *modulators[8];
 volatile MM_Queue *outputs[8];
+
+#endif //main
+#if defined(main) || defined(dactest)
 
 void dacSetup() {
 
@@ -62,6 +65,9 @@ void writeTo(byte n, volatile int val) {
 	digitalWrite(slaveSelectPin, HIGH);
 	//interrupts();
 }
+
+#endif //main, dactest
+#ifdef main
 
 void readInputs()
 {
@@ -104,53 +110,14 @@ void loop() {
 
 }
 
-#endif
+#endif //main
+
 
 #ifdef dactest
 const int button = 2;
 int buttonState = LOW;
 const int MAX = 65565;
 int testOutput;
-
-#include <SPI.h>
-#include "dac_commands.h"
-
-const int slaveSelectPin = 9;
-
-void dacSetup() {
-
-	pinMode(slaveSelectPin, OUTPUT);
-	digitalWrite(slaveSelectPin, HIGH);
-
-	SPI.begin();
-	SPI.setBitOrder(MSBFIRST);
-	SPI.setDataMode(SPI_MODE0);
-
-	byte cmd = SELECT_EXT_REF;
-	digitalWrite(slaveSelectPin, LOW);
-	SPI.transfer(cmd);
-	SPI.transfer(0x00);
-	SPI.transfer(0x00);
-	digitalWrite(slaveSelectPin, HIGH);
-}
-
-void writeTo(byte n, volatile int val) {
-	//cmd = write and update
-	//address = n as byte
-	//input = val as 16 bits
-
-	byte cmd_address = WRITEUPDATE_N | n;
-	byte msbyte = (val >> 8) & 0xff;
-	byte lsbyte = val & 0xff;
-
-	//noInterrupts();
-	digitalWrite(slaveSelectPin, LOW);
-	SPI.transfer(cmd_address);
-	SPI.transfer(msbyte);
-	SPI.transfer(lsbyte);
-	digitalWrite(slaveSelectPin, HIGH);
-	//interrupts();
-}
 
 void readInputs()
 {
