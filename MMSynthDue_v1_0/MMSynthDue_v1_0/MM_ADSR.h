@@ -1,28 +1,28 @@
 #pragma once
 #include <stdint.h>
+#include "Modulator.h"
 //reference https://github.com/rmosquito/PolyEGg/blob/master/PolyEGg/PolyEGg.ino
 
 //note: must be done at a control rate of your design.
 
-class MM_ADSR
+class MM_ADSR : virtual public Modulator
 {
 private:
-	//data members associated with each adsr
+	const int MAX_DRIVE = 65565;
+
 	int sustain;
 	int max_level;
+	int output;
 	uint8_t dacAddr;
-	const int MAX_DRIVE = 4095;
+	bool env_active;
+	bool loop_mode;
+	bool inverted;
 
-	int aInc = 1;
-	int dInc = 1;
-	int rInc = 1;
+	int aInc;
+	int dInc;
+	int rInc;
 
-	const uint8_t EPSILON = 40;		//////**********40
-
-	bool env_active = false;
-	bool loop_mode = false;
-
-	int output = 0;		//gain to be sent to dac after formating
+	//const uint8_t EPSILON = 100;		//////**********40
 
 	enum Phase
 	{
@@ -32,34 +32,36 @@ private:
 		P_RELEASE
 	}phase;
 
-	//public section method declarations
-public:
-	MM_ADSR();
-	MM_ADSR(uint8_t outAddr);
-	MM_ADSR(int attack, int decay, int sustain, int release, uint8_t outAddr);
-	MM_ADSR(int attack, int decay, int sustain, int release, uint8_t outAddr, int initial_gain);
-
-	int next();
-	void noteOn();
-	void noteOff();
-
-	void normalMode();
-	void loopMode();
-
 	void setGain(int gain);
 	void setAttack(int attack);
 	void setDecay(int decay);
 	void setSustain(int sustain);
 	void setRelease(int release);
 	void setLevels(int attack, int decay, int sustain, int release);
+	void setAddr(uint8_t addr);
 
-	uint8_t getOutputAddress();
+	//public section method declarations
+public:
+	void init();
+	void init(uint8_t outAddr);
+	void init(int attack, int decay, int sustain, int release, uint8_t outAddr);
+	void init(int attack, int decay, int sustain, int release, uint8_t outAddr, int initial_gain);
 
+	//ADSR unique operations
+	void normalMode();
+	void loopMode();
+	bool toggleInversion();
 
-	// MM_ADSR Init()
-	//{
-	//	MM_ADSR *adsr = (MM_ADSR*)malloc(sizeof(MM_ADSR));
-	//	adsr->MM_ADSR::MM_ADSR();
-	//	return *adsr;
-	//}
+	//Modulator method declarations
+	int next();
+	virtual volatile void noteOn();
+	virtual void noteOff();
+	void control1(int amt);
+	void control2(int amt);
+	void control3(int amt);
+	void control4(int amt);
+	void control8(int amt);
+	void control5(int amt);
+	void control6(int amt);
+	void control7(int amt);
 };

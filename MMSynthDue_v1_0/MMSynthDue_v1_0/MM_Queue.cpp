@@ -8,14 +8,14 @@ MM_Queue::MM_Queue()
 	max_len = 10;
 }
 
-void MM_Queue::enqueue(int val)
+void MM_Queue::enqueue(int val) volatile
 {
 	if (size == max_len) {
 		size = 0;
 		clear();
 	}
 
-	volatile Node *newNode = new Node();
+	Node *newNode = new Node();
 	if (newNode)
 	{
 		newNode->val = val;
@@ -34,14 +34,15 @@ void MM_Queue::enqueue(int val)
 	size++;
 }
 
-int MM_Queue::dequeue()
+//return -1 if empty so we can avoid bad dac updates, will not update output on -1 in main.
+int MM_Queue::dequeue() volatile
 {
 	int rtn = -1;
 	if (head)
 	{
 		rtn = head->val;
 		if (size > 1) {
-			volatile Node *temp = head;
+			Node *temp = head;
 			head = head->prev;
 			delete temp;
 			size--;
@@ -50,12 +51,12 @@ int MM_Queue::dequeue()
 	return rtn;
 }
 
-void MM_Queue::clear()
+void MM_Queue::clear() volatile
 {
-	volatile Node *current = head;
+	Node *current = head;
 	while (current)
 	{
-		volatile Node *temp = current;
+		Node *temp = current;
 		current = current->prev;
 		delete temp;
 	}

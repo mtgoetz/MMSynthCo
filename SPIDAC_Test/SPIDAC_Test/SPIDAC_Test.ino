@@ -9,6 +9,7 @@
 #include "dac_commands.h"
 
 const int slaveSelectPin = 9; //???
+const int MAX = 65565;
 
 int testOutput;
 
@@ -30,14 +31,24 @@ void dacSetup() {
 
 
 	byte cmd = SELECT_EXT_REF;
+	//byte cmd = SELECT_INT_REF;
 
-	noInterrupts();
+	//noInterrupts();
 	digitalWrite(slaveSelectPin, LOW);
 	SPI.transfer(cmd);
 	SPI.transfer(0x00);
 	SPI.transfer(0x00);
 	digitalWrite(slaveSelectPin, HIGH);
-	interrupts();
+	//interrupts();
+
+	//write all first then update all.
+	//update n command 1111 all
+	//1-7 cmd 0
+	//8 cmd 2 
+
+	//write 32 bit transfers to get faster ************
+	//get rid of disabling interupts
+	//***use disable interupts while writing values to global buffer***
 }
 
 void writeTo(byte n, int val) {
@@ -71,16 +82,21 @@ void setup() {
 
 // the loop function runs over and over again until power down or reset
 void loop() {
-  
-	for (byte i = 0; i < 8; i++) {
-		writeTo(i, testOutput);
+	//testOutput = 20000;
+	//for (byte i = 0; i < 8; i++) {
+	//	writeTo(i, testOutput);
 
-		//???
-		delayMicroseconds(1000);
-	}
+	//	//???
+	//	delayMicroseconds(1000);
+	//}
 
-	testOutput++;
-	if (testOutput > 4095) {
+	//testOutput+=20;
+	//if (testOutput > MAX) {
+	//	testOutput = 0;
+	//}
+	if (testOutput > MAX) {
 		testOutput = 0;
 	}
+	writeTo(1, testOutput);
+	testOutput += 1;
 }

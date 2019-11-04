@@ -3,9 +3,10 @@
 
 struct node
 {
-	volatile int val;
-	volatile node *next;
-	volatile node *prev;
+	int val;
+	//you never use next
+	node *next;
+	node *prev;
 };
 typedef struct node Node;
 
@@ -13,15 +14,13 @@ class MM_Queue
 {
 public:
 	MM_Queue();
-
-	void enqueue(int val);
-	int dequeue();
-	void clear();
-
 	int size;
+	void enqueue(int val) volatile;
+	int dequeue() volatile;
 
 private:
-	volatile Node *head;
-	volatile Node *tail;
+	void clear() volatile;
+	Node *head;
+	Node *tail;
 	int max_len;
 };

@@ -5,22 +5,23 @@
 
 //SoftwareSerial Serial(10, 11);
 
-MM_ADSR::MM_ADSR()	//default
+void MM_ADSR::init()	//default
 {
-	MM_ADSR(900, 400, 200, 500, 0, 4095);
+	init(900, 400, 200, 500, 0, MAX_DRIVE);
 }
 
-MM_ADSR::MM_ADSR(uint8_t outAddr)	//default with output address
+void MM_ADSR::init(uint8_t outAddr)	//default with output address
 {
-	MM_ADSR(900, 400, 200, 500, outAddr, 4095);
+	init(900, 400, 200, 500, outAddr, MAX_DRIVE);
 }
 
-MM_ADSR::MM_ADSR(int attack, int decay, int sustain, int release, uint8_t outAddr)
+void MM_ADSR::init(int attack, int decay, int sustain, int release, uint8_t outAddr) //default to max level for gain
 {
-	MM_ADSR(attack, decay, sustain, release, outAddr, 4095);
+	init(attack, decay, sustain, release, outAddr, MAX_DRIVE);
 }
 
-MM_ADSR::MM_ADSR(int attack, int decay, int sustain, int release, uint8_t outAddr, int gain)
+//going to need a bigger function for loading from memory..
+void MM_ADSR::init(int attack, int decay, int sustain, int release, uint8_t outAddr, int gain) //full cnstr
 {
 	//Serial.begin(115200);
 
@@ -28,48 +29,53 @@ MM_ADSR::MM_ADSR(int attack, int decay, int sustain, int release, uint8_t outAdd
 	setDecay(decay);
 	setSustain(sustain);
 	setRelease(release);
+	setGain(gain);
 
-	this->dacAddr = outAddr;
-	if (gain > 4095) gain = 4095;
-	this->max_level = gain;			//max output to a dac.
+	this->dacAddr = outAddr;			//max output to a dac.
 	this->phase = P_ATTACK;
+	this->output = 0;
+	this->aInc = 1;
+	this->dInc = 1;
+	this->rInc = 1;
+	this->env_active = false;
+	this->loop_mode = false;
+	this->inverted = false;
 }
 
 int MM_ADSR::next()
 {
-	//if (!env_active) return 0;
-	if (!env_active && !loop_mode) return 0;
+	if (!env_active) return 0;
 
 	switch (phase)
 	{
 	case MM_ADSR::P_ATTACK:
 
 		output += aInc;
-		if (output >= max_level - EPSILON)
+		if (output >= max_level)
 		{
+			output = max_level;
 			phase = P_DECAY;
 		}
 
 		break;
+
 	case MM_ADSR::P_DECAY:
 
 		output -= dInc;
 
-		//if in loop mode reset to attack once hit 0 instead of sustain.
-		if (loop_mode)
+		if (output <= sustain)
 		{
-			if (output < sustain + 1)
+			output = sustain;
+			if (loop_mode)
 			{
 				phase = P_ATTACK;
 			}
-		}
-		else
-		{
-			if (output <= sustain)
+			else
 			{
 				phase = P_SUSTAIN;
 			}
 		}
+
 		break;
 
 	case MM_ADSR::P_SUSTAIN:
@@ -81,14 +87,16 @@ int MM_ADSR::next()
 		output -= rInc;
 
 		//if get to 0 switch env_active to false;
-		if (output <= EPSILON)
+		if (output <= 0)
 		{
 			env_active = false;
 			output = 0;
 		}
 
 		break;
+
 	default:
+
 		return 0;
 		break;
 	}
@@ -96,26 +104,17 @@ int MM_ADSR::next()
 	return output;
 }
 
-void MM_ADSR::noteOn()
+volatile void MM_ADSR::noteOn()
 {
-	//trigger = true;
+	output = 0;
 	env_active = true;
-	//target_drive = max_level;	//drive to max during attack.
 	phase = P_ATTACK;
-	//alpha = attack;
-
 }
 
 void MM_ADSR::noteOff()
 {
-	//trigger = false;
-	env_active = false;
-	phase = P_RELEASE;
-	//alpha = release;
-	//target_drive = 0;
-
 	//env_active = false;
-
+	phase = P_RELEASE;
 }
 
 void MM_ADSR::normalMode()
@@ -125,12 +124,18 @@ void MM_ADSR::normalMode()
 
 void MM_ADSR::loopMode()
 {
-	loop_mode = true;
+	this->loop_mode = true;
+}
+
+//fill out
+bool MM_ADSR::toggleInversion()
+{
+	return false;
 }
 
 void MM_ADSR::setGain(int gain)
 {
-	if (gain > 4095) gain = 4095;
+	if (gain > MAX_DRIVE) gain = MAX_DRIVE;
 	this->max_level = gain;
 }
 
@@ -139,7 +144,7 @@ void MM_ADSR::setAttack(int attack)
 	if (attack > 1023) attack = 1023;
 	//this->attack = 0.999*cos((1023 - attack) / 795);
 	//this->attack = sqrt(this->attack);
-	this->aInc = map(attack, 0, 1023, 0, 255);
+	this->aInc = map(attack, 0, 1023, 0, MAX_DRIVE);
 }
 
 void MM_ADSR::setDecay(int decay)
@@ -147,12 +152,12 @@ void MM_ADSR::setDecay(int decay)
 	if (decay > 1023) decay = 1023;
 	//this->decay = 0.999*cos((1023 - decay) / 795);
 	//this->decay = sqrt(this->decay);
-	this->dInc = map(decay, 0, 1023, 0, 255);
+	this->dInc = map(decay, 0, 1023, 0, MAX_DRIVE);
 }
 
 void MM_ADSR::setSustain(int sustain)
 {
-	if (sustain > 4095) sustain = 4095;
+	if (sustain > MAX_DRIVE) sustain = MAX_DRIVE;
 	this->sustain = sustain;
 }
 
@@ -161,9 +166,10 @@ void MM_ADSR::setRelease(int release)
 	if (release > 1023) release = 1023;
 	//this->release = 0.999*cos((1023 - release) / 795);
 	//this->release = sqrt(this->release);
-	this->rInc = map(release, 0, 1023, 0, 255);
+	this->rInc = map(release, 0, 1023, 0, MAX_DRIVE);
 }
 
+//probably not used
 void MM_ADSR::setLevels(int attack, int decay, int sustain, int release)
 {
 	setAttack(attack);
@@ -172,9 +178,59 @@ void MM_ADSR::setLevels(int attack, int decay, int sustain, int release)
 	setSustain(sustain);
 }
 
-uint8_t MM_ADSR::getOutputAddress()
+void MM_ADSR::setAddr(uint8_t addr)
 {
-	return dacAddr;
+	this->dacAddr = addr;
 }
 
+//Attack
+void MM_ADSR::control1(int amt)
+{
+	//update aInc
+	//convert to 0-127 value
+	//cast to string
+}
+
+//Decay
+void MM_ADSR::control2(int amt)
+{
+
+}
+
+//Sustain
+void MM_ADSR::control3(int amt)
+{
+
+}
+
+//Release
+void MM_ADSR::control4(int amt)
+{
+
+}
+
+//Gain
+void MM_ADSR::control5(int amt)
+{
+
+}
+
+//loop mode
+void MM_ADSR::control6(int amt)
+{
+
+}
+
+//Inverted
+void MM_ADSR::control7(int amt)
+{
+
+}
+
+//Module type --- this will be more complex: need to show on screen, need to accept only when shift
+//is released, need main code to do the work so maybe delete this control and manage from main
+void MM_ADSR::control8(int amt)
+{
+
+}
 

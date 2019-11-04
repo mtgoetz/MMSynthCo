@@ -7,7 +7,7 @@ public:
 	//virtual ~Modulator() {}
 	virtual void setAddr(uint8_t addr) = 0;
 	virtual int next() = 0;
-	virtual void noteOn() = 0;
+	virtual volatile void noteOn() = 0;
 	virtual void noteOff() = 0;
 	virtual void control1(int amt) = 0;
 	virtual void control2(int amt) = 0;
