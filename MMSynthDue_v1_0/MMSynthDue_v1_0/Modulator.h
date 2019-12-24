@@ -6,6 +6,7 @@ public:
 	//uint8_t dacAddr;
 	//virtual ~Modulator() {}
 	virtual void setAddr(uint8_t addr) = 0;
+	virtual int getAddr() = 0;
 	virtual int next() = 0;
 	virtual volatile void noteOn() = 0;
 	virtual void noteOff() = 0;

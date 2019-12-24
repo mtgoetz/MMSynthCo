@@ -23,8 +23,6 @@ void MM_ADSR::init(int attack, int decay, int sustain, int release, uint8_t outA
 //going to need a bigger function for loading from memory..
 void MM_ADSR::init(int attack, int decay, int sustain, int release, uint8_t outAddr, int gain) //full cnstr
 {
-	//Serial.begin(115200);
-
 	setAttack(attack);
 	setDecay(decay);
 	setSustain(sustain);
@@ -34,9 +32,6 @@ void MM_ADSR::init(int attack, int decay, int sustain, int release, uint8_t outA
 	this->dacAddr = outAddr;			//max output to a dac.
 	this->phase = P_ATTACK;
 	this->output = 0;
-	this->aInc = 1;
-	this->dInc = 1;
-	this->rInc = 1;
 	this->env_active = false;
 	this->loop_mode = false;
 	this->inverted = false;
@@ -133,6 +128,10 @@ bool MM_ADSR::toggleInversion()
 	return false;
 }
 
+int MM_ADSR::mapRange(int val) {
+	return map(val, 0, 1023, MAX_DRIVE, MIN_INCREMENT);
+}
+
 void MM_ADSR::setGain(int gain)
 {
 	if (gain > MAX_DRIVE) gain = MAX_DRIVE;
@@ -144,7 +143,7 @@ void MM_ADSR::setAttack(int attack)
 	if (attack > 1023) attack = 1023;
 	//this->attack = 0.999*cos((1023 - attack) / 795);
 	//this->attack = sqrt(this->attack);
-	this->aInc = map(attack, 0, 1023, 0, MAX_DRIVE);
+	this->aInc = mapRange(attack);
 }
 
 void MM_ADSR::setDecay(int decay)
@@ -152,7 +151,8 @@ void MM_ADSR::setDecay(int decay)
 	if (decay > 1023) decay = 1023;
 	//this->decay = 0.999*cos((1023 - decay) / 795);
 	//this->decay = sqrt(this->decay);
-	this->dInc = map(decay, 0, 1023, 0, MAX_DRIVE);
+	//this->dInc = map(decay, 0, 1023, 0, MAX_DRIVE);
+	this->dInc = mapRange(decay);
 }
 
 void MM_ADSR::setSustain(int sustain)
@@ -166,7 +166,8 @@ void MM_ADSR::setRelease(int release)
 	if (release > 1023) release = 1023;
 	//this->release = 0.999*cos((1023 - release) / 795);
 	//this->release = sqrt(this->release);
-	this->rInc = map(release, 0, 1023, 0, MAX_DRIVE);
+	//this->rInc = map(release, 0, 1023, 0, MAX_DRIVE);
+	this->rInc = mapRange(release);
 }
 
 //probably not used
@@ -183,30 +184,43 @@ void MM_ADSR::setAddr(uint8_t addr)
 	this->dacAddr = addr;
 }
 
+int MM_ADSR::getAddr()
+{
+	return this->dacAddr;
+}
+
 //Attack
 void MM_ADSR::control1(int amt)
 {
-	//update aInc
-	//convert to 0-127 value
-	//cast to string
+	//because increasing the phase means going slower, a smaller increment amount
+	//means a longer phase (increasing the attack time).
+	aInc -= amt;
+	if (aInc < 0) aInc = 0;
+	if (aInc > MAX_DRIVE) aInc = MAX_DRIVE;
 }
 
 //Decay
 void MM_ADSR::control2(int amt)
 {
-
+	dInc -= amt;
+	if (dInc < 0) dInc = 0;
+	if (dInc > MAX_DRIVE) dInc = MAX_DRIVE;
 }
 
 //Sustain
 void MM_ADSR::control3(int amt)
 {
-
+	sustain += amt;
+	if (sustain < 0) sustain = 0;
+	if (sustain > MAX_DRIVE) sustain = MAX_DRIVE;
 }
 
 //Release
 void MM_ADSR::control4(int amt)
 {
-
+	rInc -= amt;
+	if (rInc < 0) rInc = 0;
+	if (rInc > MAX_DRIVE) rInc = MAX_DRIVE;
 }
 
 //Gain

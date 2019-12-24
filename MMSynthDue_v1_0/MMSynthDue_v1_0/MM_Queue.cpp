@@ -1,24 +1,24 @@
 #include "MM_Queue.h"
 
-MM_Queue::MM_Queue()
+MM_Queue::MM_Queue(int len)
 {
 	head = NULL;
 	tail = NULL;
 	size = 0;
-	max_len = 10;
+	max_len = len;
 }
 
 void MM_Queue::enqueue(int val) volatile
 {
-	if (size == max_len) {
-		size = 0;
+	if (size >= max_len) {
 		clear();
 	}
 
 	Node *newNode = new Node();
 	if (newNode)
-	{
-		newNode->val = val;
+	{	
+		newNode->prev = NULL;
+		newNode->data = val;
 		if (head)
 		{
 			tail->prev = newNode;
@@ -29,9 +29,8 @@ void MM_Queue::enqueue(int val) volatile
 			head = newNode;
 			tail = newNode;
 		}
+		size++;
 	}
-
-	size++;
 }
 
 //return -1 if empty so we can avoid bad dac updates, will not update output on -1 in main.
@@ -40,24 +39,36 @@ int MM_Queue::dequeue() volatile
 	int rtn = -1;
 	if (head)
 	{
-		rtn = head->val;
+		rtn = head->data;
 		if (size > 1) {
-			Node *temp = head;
+			volatile Node *temp = head;
 			head = head->prev;
 			delete temp;
 			size--;
 		}
+		else if (size == 1)
+		{
+			delete head;
+			size--;
+		}
 	}
+
 	return rtn;
 }
 
 void MM_Queue::clear() volatile
 {
-	Node *current = head;
+	volatile Node *current = head;
 	while (current)
 	{
-		Node *temp = current;
+		volatile Node *temp = current;
 		current = current->prev;
 		delete temp;
 	}
+	size = 0;
+}
+
+bool MM_Queue::hasNext() volatile
+{
+	return size > 0;
 }

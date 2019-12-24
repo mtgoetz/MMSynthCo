@@ -124,7 +124,7 @@ bool notemap::isBitSet(uint8_t note)
 /* void notemap::getLowest(uint8_t note)
  *
  *  Find the lowest bit set in the bitmap and return it's index.
- *  Used when we want to determine which not to play.
+ *  Used when we want to determine which note to play.
  *
  *  Implements low-note priority.
  *  TBD: Could reverse the search for high-note priority.

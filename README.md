@@ -1,2 +1,2 @@
 # MMSynthCo
-Modular FM Synth MIDI and modulation source Arduino modul
+Modular FM Synth MIDI

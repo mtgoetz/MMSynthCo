@@ -9,6 +9,7 @@ class MM_ADSR : virtual public Modulator
 {
 private:
 	const int MAX_DRIVE = 65565;
+	const int MIN_INCREMENT = 4000; //phase completes in 5 seconds
 
 	int sustain;
 	int max_level;
@@ -38,7 +39,7 @@ private:
 	void setSustain(int sustain);
 	void setRelease(int release);
 	void setLevels(int attack, int decay, int sustain, int release);
-	void setAddr(uint8_t addr);
+	int mapRange(int val);
 
 	//public section method declarations
 public:
@@ -64,4 +65,6 @@ public:
 	void control5(int amt);
 	void control6(int amt);
 	void control7(int amt);
+	int getAddr();
+	void setAddr(uint8_t addr);
 };
