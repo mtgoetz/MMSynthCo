@@ -9,7 +9,7 @@ class MM_ADSR : virtual public Modulator
 {
 private:
 	const int MAX_DRIVE = 65565;
-	const int MIN_INCREMENT = 4000; //phase completes in 5 seconds
+	const int MIN_INCREMENT = 20; //phase completes in 5 seconds
 
 	int sustain;
 	int max_level;
@@ -55,7 +55,7 @@ public:
 
 	//Modulator method declarations
 	int next();
-	virtual volatile void noteOn();
+	virtual void noteOn(uint8_t key);
 	virtual void noteOff();
 	void control1(int amt);
 	void control2(int amt);

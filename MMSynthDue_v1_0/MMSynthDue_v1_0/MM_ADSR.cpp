@@ -39,23 +39,27 @@ void MM_ADSR::init(int attack, int decay, int sustain, int release, uint8_t outA
 
 int MM_ADSR::next()
 {
+	//output++;
+	//if (output > MAX_DRIVE) output = 0;
+	//return output;
 	if (!env_active) return 0;
+	//else return MAX_DRIVE;
 
 	switch (phase)
 	{
 	case MM_ADSR::P_ATTACK:
-
+		
 		output += aInc;
 		if (output >= max_level)
 		{
 			output = max_level;
 			phase = P_DECAY;
 		}
-
+		//return 20000;
 		break;
 
 	case MM_ADSR::P_DECAY:
-
+		
 		output -= dInc;
 
 		if (output <= sustain)
@@ -70,7 +74,7 @@ int MM_ADSR::next()
 				phase = P_SUSTAIN;
 			}
 		}
-
+		//return 30000;
 		break;
 
 	case MM_ADSR::P_SUSTAIN:
@@ -78,7 +82,7 @@ int MM_ADSR::next()
 		break;
 
 	case MM_ADSR::P_RELEASE:
-
+		
 		output -= rInc;
 
 		//if get to 0 switch env_active to false;
@@ -87,11 +91,11 @@ int MM_ADSR::next()
 			env_active = false;
 			output = 0;
 		}
-
+		//return 50000;
 		break;
 
 	default:
-
+		//return MAX_DRIVE;
 		return 0;
 		break;
 	}
@@ -99,7 +103,7 @@ int MM_ADSR::next()
 	return output;
 }
 
-volatile void MM_ADSR::noteOn()
+void MM_ADSR::noteOn(uint8_t key)
 {
 	output = 0;
 	env_active = true;
@@ -132,6 +136,7 @@ int MM_ADSR::mapRange(int val) {
 	return map(val, 0, 1023, MAX_DRIVE, MIN_INCREMENT);
 }
 
+//I don't know if this will ever be settable
 void MM_ADSR::setGain(int gain)
 {
 	if (gain > MAX_DRIVE) gain = MAX_DRIVE;
@@ -144,6 +149,7 @@ void MM_ADSR::setAttack(int attack)
 	//this->attack = 0.999*cos((1023 - attack) / 795);
 	//this->attack = sqrt(this->attack);
 	this->aInc = mapRange(attack);
+	//this->aInc = 5000;
 }
 
 void MM_ADSR::setDecay(int decay)

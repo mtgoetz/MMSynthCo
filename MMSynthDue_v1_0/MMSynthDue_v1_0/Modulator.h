@@ -8,7 +8,7 @@ public:
 	virtual void setAddr(uint8_t addr) = 0;
 	virtual int getAddr() = 0;
 	virtual int next() = 0;
-	virtual volatile void noteOn() = 0;
+	virtual void noteOn(uint8_t key) = 0;
 	virtual void noteOff() = 0;
 	virtual void control1(int amt) = 0;
 	virtual void control2(int amt) = 0;
@@ -21,6 +21,7 @@ public:
 
 	//include control string name functions for display
 	//+others?
+	//virtual void initOnStartup() = 0;
 };
 
 //Modulator::~Modulator() {}
