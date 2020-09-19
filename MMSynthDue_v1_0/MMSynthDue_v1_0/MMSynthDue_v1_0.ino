@@ -4,220 +4,33 @@
  Author:	Matt Goetz & Matt Barton - MMSynthCo
 */
 
-//analog read is 10 bit 1023
-//dac out is 12 bit 4095
-//65565 - 16 bit
-#define main
-//#define adsr_test //with main
-//#define queue_test //used with main
-//#define dactest
-#define midi
-
 #include "MM_ADSR.h"
 #include "Modulator.h"
 #include "dac_commands.h"
 
 #include <SPI.h>
 #include <DueTimer.h>
-#include "MM_Queue.h"
 
-
-#ifdef midi
-
-//maybe this sort of stuff should go into the modulator???????????????????????????????????
-
-#include <MIDI.h>
-#include "notemap.h"
-
-MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI);
-
-// global variables
-//
-// notetracker knows which note ons & offs we have seen.
-// We refer to it when it's time to generate CV and gate signals,
-static notetracker themap;
-
-// Variables for arpeggiator clock.
-static uint32_t tempo_delay = 10;
-static bool     send_tick = false;
-
-
-
-// constants to describe the MIDI input.
-// NUM_KEYS is the number of keys we're interpreting
-// BASE_KEY is the offset of the lowest key number
-static const int8_t NUM_KEYS = 49;
-static const int8_t BASE_KEY = 36;
-
-
-void updateCV(uint8_t key)
-{
-
-
-
-
-
-	//TODO: do something with val....
-
-
-
-
-
-}
-
-/////////////////////////////////////////////////////////////////////////
-// Callbacks for the MIDI parser
-/////////////////////////////////////////////////////////////////////////
-
-/* void handleNoteOn(byte channel, byte pitch, byte velocity)
-*
-*  Called by MIDI parser when note on messages arrive.
-*/
-void handleNoteOn(byte channel, byte pitch, byte velocity)
-{
-	// Do whatever you want when a note is pressed.
-	// Try to keep your callbacks short (no delays ect)
-	// otherwise it would slow down the loop() and have a bad impact
-	// on real-time performance.
-
-	themap.noteOn(pitch);
-
-	uint8_t key;
-
-	key = themap.whichKey();
-
-#if VERBOSE
-	//Serial.print("key: ");
-	//Serial.println(key, HEX);
-#endif
-
-	// key is in terms of MIDI note number.
-	// Constraining the key number to 4 octave range
-	// Soc we can do 4 Volts +/- ~0.5V bend range.
-	if (key < BASE_KEY)
-	{
-		key = 0;
-	}
-	else if (key > BASE_KEY + NUM_KEYS)
-	{
-		key = NUM_KEYS;
-	}
-	else
-	{
-		key -= BASE_KEY;
-	}
-
-	//what about pitch?? maybe change signature of noteon(note which??)
-
-	for (byte i = OUT_1; i <= OUT_8; i++) {
-		modulators[i]->noteOn(key);
-	}
-
-}
-
-/* void handleNoteOff(byte channel, byte pitch, byte velocity)
-*
-*  Called by MIDI parser when note off messages arrive.
-*/
-void handleNoteOff(byte channel, byte pitch, byte velocity)
-{
-	// Do something when the note is released.
-	// Note that NoteOn messages with 0 velocity are interpreted as NoteOffs.
-	//Serial.print("off: ");
-	//Serial.println(pitch, HEX);
-
-	//if correct channel do this stuff, else send midi???
-
-	themap.noteOff(pitch);
-
-	for (byte i = OUT_1; i <= OUT_8; i++) {
-		modulators[i]->noteOff();
-	}
-
-	//updateOutputs();
-}
-
-//other methods in this section...
-
-void handlePitchBend(byte channel, int bend) {
-	//do something
-
-
-	//we might need a list of modulators that are notes
-
-}
-
-/////////////////////////////////////////////////////////////////////////
-// millisecond timer related
-//
-// See documentation for MStimer2 (http://playground.arduino.cc/Main/MsTimer2).
-////////////////////////////////////////////////////////////////////////
-
-//Note: currently not used
-void timer_callback()
-{
-	// Tell the mainline loop that time has elapsed
-	send_tick = true;
-}
-
-/* void tick_func()
-*
-* Called by mainline loop when send_tick is true.
-* Keeps track of rising/falling edges, and notifies notetracker
-* of clock status.
-*/
-void tick_func()
-{
-	static uint8_t counter = 0;
-
-	counter++;
-
-	if (counter & 0x01)
-	{
-		themap.tickArp(false);
-
-		//maybe not??
-		updateOutputs();
-	}
-	else
-	{
-		themap.tickArp(true);
-
-		//maybe not?
-		updateOutputs();
-	}
-}
 
 /////////////////////////////////////////////////////////////////////////
 // Panel interface control routines
 /////////////////////////////////////////////////////////////////////////
 
-/*void check_pots()
-*
-* Read the analog input (tempo control)
-*/
-//void check_pots()
-//{
-//	uint32_t pot_val;
-//	uint32_t calc;
-//
-//
-//	//get this from rotary encoder on interface or from midi depending on mode.
-//	pot_val = analogRead(PIN_TEMPO_POT);
-//
-//	// Result is 10 bits
-//	//calc = (((0x3ff - pot_val) * 75)/1023) + 8;
-//	calc = (((0x3ff - pot_val) * 1800) / 1023) + 25;
-//
-//	tempo_delay = calc;
-//
-//}
+Modulator *modulators[8];
+
+MM_ADSR *env1 = new MM_ADSR();
+MM_ADSR *env2 = new MM_ADSR();
+MM_ADSR *env3 = new MM_ADSR();
+MM_ADSR *env4 = new MM_ADSR();
+MM_ADSR *env5 = new MM_ADSR();
+MM_ADSR *env6 = new MM_ADSR();
+MM_ADSR *env7 = new MM_ADSR();
+MM_ADSR *env8 = new MM_ADSR();
 
 
-
-#endif // midi
 
 const int slaveSelectPin = 9;
+const int ldcaPin = 8;
 
 const byte NUM_OUTPUTS = 8;
 
@@ -230,28 +43,33 @@ const byte OUT_6 = 5;
 const byte OUT_7 = 6;
 const byte OUT_8 = 7;
 
+
+enum inputs {
+	TEST_BUTTON,
+	INPUTS_SIZE
+};
+
+bool changedInputStates[INPUTS_SIZE];
+
+
+volatile byte testButtonState = LOW;
+
 const int UPDATE_PER_SEC = 20000;
 
-#ifdef main
+//Modulator *modulators[NUM_OUTPUTS];
 
-Modulator *modulators[NUM_OUTPUTS];
-volatile MM_Queue *outputs = new MM_Queue(10);
-
-#endif //main
-
-#if defined(dactest) || defined(queue_test) || defined(adsr_test)
 int testOutput;
 int trigger_event;
 const int MAX_DAC_OUTPUT = 65565;
-#endif
 
-#ifdef adsr_test
-int button_pin = 4;
-int button_state = 0;
+const int TEST_BUTTON_PIN = 4;
+int button_state = LOW;
 bool note_on = false;
-#endif
 
 void dacSetup() {
+
+	pinMode(ldcaPin, OUTPUT);
+	digitalWrite(ldcaPin, LOW);
 
 	pinMode(slaveSelectPin, OUTPUT);
 	digitalWrite(slaveSelectPin, HIGH);
@@ -259,6 +77,7 @@ void dacSetup() {
 	SPI.begin();
 	SPI.setBitOrder(MSBFIRST);
 	SPI.setDataMode(SPI_MODE0);
+	//SPI.setClockDivider();
 
 	byte cmd = SELECT_EXT_REF;
 	noInterrupts();
@@ -296,158 +115,140 @@ void writeTo(byte which, volatile int val, bool do_final) {
 	interrupts();
 }
 
-#ifdef main
 void readInputs()
 {
-	//To test:
-//1 get note on/ note off
-//call env.next()
-//send to dac using address
 
-//get settings in interupt
+}
 
-#ifdef adsr_test
-	button_state = digitalRead(button_pin);
-
-	if (button_state == HIGH && !note_on) {
-		for (byte i = OUT_1; i <= OUT_8; i++) {
-			modulators[i]->noteOn();
-		}
-		note_on = true;
+/*void controlChanged(volatile int which, volatile int value) {
+	switch (which) {
+		case TEST_BUTTON :
+			//do update based on state of buttonState
+			testButtonState = value;
+			changedInputStates[TEST_BUTTON] = true;
+			break;
+		default :
+			break;
 	}
-	else if (button_state == LOW && note_on) {
-		for (byte i = OUT_1; i <= OUT_8; i++) {
-			modulators[i]->noteOff();
-		}
-		note_on = false;
-	}
-#endif
+		
+}*/
 
-#ifdef queue_test
-
-	int loop = 1;
-	//if (trigger_event == 15000) {
-	//	loop = 9;
-	//	trigger_event = 0;
-	//}
-
-	for (; loop > 0; loop--) {
-		outputs->enqueue(testOutput);
-		testOutput++;
-		if (testOutput > MAX) {
-			testOutput = 0;
-		}
-	}
-	//trigger_event++;
-	//if (trigger_event > MAX) {
-	//	trigger_event = 0;
-	//}
-
-#endif // !queue_test
-
-#ifdef midi
-	MIDI.read();
-#endif
+void testButtonChanged() {
+	testButtonState = !testButtonState;
+	changedInputStates[TEST_BUTTON] = true;
 }
 
 void updateOutputs()
 {
-	readInputs();
 
-	//main output sequence
-	//might just want to call no interupts, interrupts here instead?
-#ifdef adsr_test
-	button_state = digitalRead(button_pin);
-	if (button_state == HIGH)
-	{
-		for (byte i = OUT_1; i <= OUT_7; i++) {
-			writeTo(i, MAX_DAC_OUTPUT, false);
-		}
-		writeTo(OUT_8, MAX_DAC_OUTPUT, true);
-	}
-	else
-	{
-		for (byte i = OUT_1; i <= OUT_7; i++) {
-			writeTo(i, 0, false);
-		}
-		writeTo(OUT_8, 0, true);
-	}
-#endif
-
-#ifdef main
-
-	for (byte i = OUT_1; i <= OUT_7; i++) {
+	/*for (byte i = OUT_1; i <= OUT_7; i++) {
 		writeTo(i, modulators[i]->next(), false);
 	}
-	writeTo(OUT_8, modulators[OUT_8]->next(), true);
-#endif
+	writeTo(OUT_8, modulators[OUT_8]->next(), true);*/
+
+	/*for (int i = 0; i < INPUTS_SIZE; i++) {
+		if (changedInputStates[i]) {
+			switch (i) {
+				case TEST_BUTTON:
+					for (byte i = OUT_1; i <= OUT_7; i++) {
+						writeTo(i, button_state, false);
+					}
+					writeTo(OUT_8, button_state, true);
+					changedInputStates[i] = false;
+					break;
+				default:
+					break;
+			}
+		}
+	}*/
+
+	if (testOutput > MAX_DAC_OUTPUT) {
+		testOutput = 0;
+	}
+
+	
+	switch (testOutput) {
+	case 0:
+		env1->noteOn(0);
+		env2->noteOn(0);
+		env3->noteOn(0);
+		env4->noteOn(0);
+		env5->noteOn(0);
+		env6->noteOn(0);
+		env7->noteOn(0);
+		env8->noteOn(0);
+		break;
+	case 40000:
+		env1->noteOff();
+		env2->noteOff();
+		env3->noteOff();
+		env4->noteOff();
+		env5->noteOff();
+		env6->noteOff();
+		env7->noteOff();
+		env8->noteOff();
+	default:
+		break;
+	}
+	/*for (int i = 0; i < 7; i++) {
+		writeTo(i, testOutput, false);
+	}*/
+
+	Serial.println("Updating...");
+	writeTo(0, env1->next(), false);
+	writeTo(1, env2->next(), false);
+	writeTo(2, env3->next(), false);
+	writeTo(3, env4->next(), false);
+	writeTo(4, env5->next(), false);
+	writeTo(5, env6->next(), false);
+	writeTo(6, env7->next(), false);
+	writeTo(7, env8->next(), true);
+
+	testOutput += 1;
+
+
+	/*if (testOutput > MAX_DAC_OUTPUT) {
+		testOutput = 0;
+	}
+	writeTo(0, 0, false);
+	writeTo(1, 13113, false);
+	writeTo(2, 26226, false);
+	writeTo(3, 39339, false);
+	writeTo(4, 52452, false);
+	testOutput += 1;
+	writeTo(5, testOutput, false);
+	writeTo(6, (MAX_DAC_OUTPUT - testOutput), false);
+	writeTo(7, MAX_DAC_OUTPUT, true);*/
 
 }
 
 // the setup function runs once when you press reset or power the board
 void setup() {
 
-#ifdef midi
-	// .begin sets the thru mode to on, so we'll have to turn it off if we don't want echo
-	MIDI.begin(MIDI_CHANNEL_OMNI);
-
-	MIDI.turnThruOff();
-
-	// so it is called upon reception of a NoteOn.
-	MIDI.setHandleNoteOn(handleNoteOn);  // Put only the name of the function
-										 // Do the same for NoteOffs
-	MIDI.setHandleNoteOff(handleNoteOff);
-
-	MIDI.setHandlePitchBend(handlePitchBend);
-#endif // midi
-
-#ifdef queue_test
-	testOutput = 0;
-	trigger_event = 0;
-#endif
-#ifdef adsr_test
-	MM_ADSR *a = new MM_ADSR();
-	a->init(5, 5, 900, 5, OUT_1);
-	MM_ADSR *b = new MM_ADSR();
-	b->init(2000, 400, 500, 1023, OUT_2);
-	MM_ADSR *c = new MM_ADSR();
-	c->init(500, 100, 800, 600, OUT_3);
-	MM_ADSR *d = new MM_ADSR();
-	//square
-	d->init(0, 0, 1023, 0, OUT_4);
-	MM_ADSR *e = new MM_ADSR();
-	//max phases
-	e->init(1023, 1023, 500, 1023, OUT_5);
-	MM_ADSR *f = new MM_ADSR();
-	f->init(80, 80, 800, 80, OUT_6);
-	MM_ADSR *g = new MM_ADSR();
-	g->init(900, 800, 700, 600, OUT_7);
-	MM_ADSR *h = new MM_ADSR();
-	h->init(100, 100, 1000, 1023, OUT_8);
-
-	modulators[a->getAddr()] = a;
-	modulators[b->getAddr()] = b;
-	modulators[c->getAddr()] = c;
-	modulators[d->getAddr()] = d;
-	modulators[e->getAddr()] = e;
-	modulators[f->getAddr()] = f;
-	modulators[g->getAddr()] = g;
-	modulators[h->getAddr()] = h;
-
-	pinMode(button_pin, INPUT);
-#endif
+	//pinMode(button_pin, INPUT);
+	//attachInterrupt(digitalPinToInterrupt(TEST_BUTTON_PIN), testButtonChanged, CHANGE);
 
 	dacSetup();
-	//outputs->enqueue(0);
+
+	testOutput = 0;
+
+	env1->init();
+	env2->init();
+	env3->init();
+	env4->init();
+	env5->init();
+	env6->init();
+	env7->init();
+	env8->init();
+
 	//50 microseconds = 20,000 times per second.
-	Timer.getAvailable().attachInterrupt(updateOutputs).start(50);
+	Timer.getAvailable().attachInterrupt(updateOutputs).start(150);
+
 }
 
 // Not used
 void loop() {
 }
-
-#endif //main
 
 
 

@@ -26,6 +26,8 @@ private:
 	// bend is signed, 14-bit
 	int last_bend = 0;
 
+	static const uint8_t MIDDLE_C = 60;
+
 	//public section method declarations
 public:
 	void init();

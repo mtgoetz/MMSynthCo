@@ -7,7 +7,7 @@ void MM_Note::init()
 
 void MM_Note::init(uint8_t outAddr)
 {
-	
+	this->init(MIDDLE_C, outAddr);
 }
 
 void MM_Note::init(uint8_t initialKey, uint8_t outAddr)

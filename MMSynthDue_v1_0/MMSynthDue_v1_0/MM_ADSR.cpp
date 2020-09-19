@@ -48,18 +48,18 @@ int MM_ADSR::next()
 	switch (phase)
 	{
 	case MM_ADSR::P_ATTACK:
-		
+		Serial.println("attack");
 		output += aInc;
 		if (output >= max_level)
 		{
 			output = max_level;
 			phase = P_DECAY;
 		}
-		//return 20000;
+		return 20000;
 		break;
 
 	case MM_ADSR::P_DECAY:
-		
+		Serial.println("decay");
 		output -= dInc;
 
 		if (output <= sustain)
@@ -74,15 +74,16 @@ int MM_ADSR::next()
 				phase = P_SUSTAIN;
 			}
 		}
-		//return 30000;
+		return 30000;
 		break;
 
 	case MM_ADSR::P_SUSTAIN:
+		Serial.println("sustain");
 		//do nothing
 		break;
 
 	case MM_ADSR::P_RELEASE:
-		
+		Serial.println("release");
 		output -= rInc;
 
 		//if get to 0 switch env_active to false;
