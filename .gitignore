@@ -1,0 +1,12 @@
+MMSynthDue_v1_0/MMSynthDue_v1_0/jlink.config
+MMSynthDue_v1_0/MMSynthDue_v1_0/jlink.log
+MMSynthDue_v1_0/MMSynthDue_v1_0/Debug/*
+MMSynthDue_v1_0/MMSynthDue_v1_0/Release/
+MMSynthDue_v1_0/MMSynthDue_v1_0/__vm/.MM_FM_ControlUnit.vsarduino.h
+MMSynthDue_v1_0/MMSynthDue_v1_0/__vm/*.xml
+MMSynthDue_v1_0/.vs/*
+MMSynthDue_v1_0/MMSynthDue_v1_0/.vs/*
+
+
+
+

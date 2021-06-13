@@ -1,62 +1,68 @@
 #pragma once
 #include <stdint.h>
 #include "Modulator.h"
-//reference https://github.com/rmosquito/PolyEGg/blob/master/PolyEGg/PolyEGg.ino
+#include <Arduino.h>
 
-//note: must be done at a control rate of your design.
+#define ADSR_TABLE_SIZE 1024			// number of time points
+#define ATTACK_ALPHA 0.995				// varies between 0.9 (steep curve) and 0.9995 (straight line)
+#define ATTACK_DECAY_RELEASE 0.997		// fits to ARRAY_SIZE 1024
+#define MAX_DRIVE 65536
 
 class MM_ADSR : virtual public Modulator
 {
 private:
-	const int MAX_DRIVE = 65565;
-	const int MIN_INCREMENT = 4000; //phase completes in 5 seconds
+	int attackTable[ADSR_TABLE_SIZE];
+	int decayReleaseTable[ADSR_TABLE_SIZE];
 
-	int sustain;
-	int max_level;
-	int output;
-	uint8_t dacAddr;
-	bool env_active;
-	bool loop_mode;
-	bool inverted;
+	bool loopMode = false;
+	bool inverted = false;
+	uint8_t dacAddr = 0;
 
-	int aInc;
-	int dInc;
-	int rInc;
+	//default values
+	unsigned long attack = 500000;		// 0 to 20 sec
+	unsigned long decay = 500000;		// 1ms to 60 sec
+	int sustain = 40000;				// 0 to 65535
+	unsigned long release = 500000;		// 1ms to 60 sec
 
-	//const uint8_t EPSILON = 100;		//////**********40
+	// time stamp for note on and note off
+	unsigned long noteOnMicros = 0;
+	unsigned long noteOffMicros = 0;
 
-	enum Phase
-	{
-		P_ATTACK,
-		P_DECAY,
-		P_SUSTAIN,
-		P_RELEASE
-	}phase;
+	// internal values needed to transition to new pulse (attack) and to release at any point in time
+	uint32_t output;
+	int releaseStart;
+	int attackStart;
+	int notesPressedCount = 0;
 
-	void setGain(int gain);
-	void setAttack(int attack);
-	void setDecay(int decay);
+	void setAttack(unsigned long attack);
+	void setDecay(unsigned long decay);
 	void setSustain(int sustain);
-	void setRelease(int release);
-	void setLevels(int attack, int decay, int sustain, int release);
-	int mapRange(int val);
+	void setRelease(unsigned long release);
+	//void setGain(int gain);
+
+	void noteOn(unsigned long micros);
+	void noteOff(unsigned long micros);
+	int getWave(unsigned long micros);
+
+	//todo: remove?
+	//int mapRange(int val);
 
 	//public section method declarations
 public:
 	void init();
 	void init(uint8_t outAddr);
-	void init(int attack, int decay, int sustain, int release, uint8_t outAddr);
-	void init(int attack, int decay, int sustain, int release, uint8_t outAddr, int initial_gain);
+	void init(unsigned long attack, unsigned long decay, int sustain, unsigned long release, uint8_t outAddr);
+	void init(unsigned long attack, unsigned long decay, int sustain, unsigned long release, uint8_t outAddr, int initial_gain, bool loopMode, bool invert);
 
 	//ADSR unique operations
-	void normalMode();
-	void loopMode();
+	void loopModeOff();
+	void loopModeOn();
 	bool toggleInversion();
 
 	//Modulator method declarations
 	int next();
-	virtual volatile void noteOn();
-	virtual void noteOff();
+	virtual volatile void noteOn(uint8_t channel, uint8_t pitch, uint8_t velocity);
+	virtual void noteOff(uint8_t channel, uint8_t pitch, uint8_t velocity);
 	void control1(int amt);
 	void control2(int amt);
 	void control3(int amt);

@@ -8,8 +8,8 @@ public:
 	virtual void setAddr(uint8_t addr) = 0;
 	virtual int getAddr() = 0;
 	virtual int next() = 0;
-	virtual volatile void noteOn() = 0;
-	virtual void noteOff() = 0;
+	virtual volatile void noteOn(uint8_t channel, uint8_t pitch, uint8_t velocity) = 0;
+	virtual void noteOff(uint8_t channel, uint8_t pitch, uint8_t velocity) = 0;
 	virtual void control1(int amt) = 0;
 	virtual void control2(int amt) = 0;
 	virtual void control3(int amt) = 0;

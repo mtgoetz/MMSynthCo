@@ -15,12 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="MMSynthDue_v1_0.ino" />
+    <None Include="SAM_DUE.Debug.debugger_launch.json" />
+    <None Include="MM_FM_ControlUnit.ino" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="__vm\.MMSynthDue_v1_0.vsarduino.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="MM_ADSR.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -36,6 +34,21 @@
     <ClInclude Include="dac_commands.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MM_Note.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MM_LFO.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="__vm\MM_FM_ControlUnit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="__vm\.MM_FM_ControlUnit.vsarduino.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="__vm\.MMSynthDue_v1_0.vsarduino.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MM_ADSR.cpp">
@@ -45,6 +58,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MM_Queue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MM_Note.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MM_LFO.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

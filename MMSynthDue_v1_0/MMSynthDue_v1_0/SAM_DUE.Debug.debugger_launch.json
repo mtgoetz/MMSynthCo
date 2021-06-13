@@ -1,0 +1,28 @@
+{
+  "serverLaunchTimeout": 5000,
+  "filterStdout": false,
+  "filterStderr": true,
+  "targetArchitecture": "arm",
+  "stopAtEntry": false,
+  "externalConsole": false,
+  "MIMode": "gdb",
+  "MIDebuggerServerAddress": "localhost:2331",
+  "cwd": "C:\\Users\\mthom\\AppData\\Local\\Temp\\VMBuilds\\Test\\arduino_due_x_dbg\\Debug",
+  "MIDebuggerPath": "C:\\Users\\mthom\\AppData\\Local\\arduino15\\packages\\arduino\\tools\\arm-none-eabi-gcc\\4.8.3-2014q1/bin\\arm-none-eabi-gdb.exe",
+  "MIDebuggerArgs": "",
+  "debugServerPath": "C:\\Program Files (x86)\\SEGGER\\JLink\\JLinkGDBServer.exe",
+  "debugServerArgs": "-select USB -device ATSAM3X8E -endian little -if JTAG -speed 4000 -noir -LocalhostOnly",
+  "setupCommands": [],
+  "program": "C:\\Users\\mthom\\AppData\\Local\\Temp\\VMBuilds\\MMSynthDue_v1_0\\arduino_due_x_dbg\\Debug\\MMSynthDue_v1_0.ino.elf",
+  "logging": {
+    "moduleLoad": false,
+    "trace": false,
+    "engineLogging": false,
+    "programOutput": false,
+    "exceptions": false,
+    "traceResponse": false
+  },
+  "visualizerFile": "C:\\Users\\mthom\\AppData\\Local\\Temp\\VMBuilds\\MMSynthDue_v1_0\\arduino_due_x_dbg\\Debug\\debugger_tmp.natvis",
+  "showDisplayString": true
+
+}
