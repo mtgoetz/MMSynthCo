@@ -155,7 +155,6 @@ uint8_t notemap::getLowest()
 				if (keys[i] & j)
 				{
 					keynum = (i * 8) + k;
-
 					return keynum;
 				}
 			}

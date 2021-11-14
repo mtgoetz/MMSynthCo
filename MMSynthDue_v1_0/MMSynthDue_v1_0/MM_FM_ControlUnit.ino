@@ -7,8 +7,6 @@
 
 
 //todo
-//fix micros - overflowing somewhere during fast attack
-//!!!!!! unsigned ints - test adsr bug on osc
 //midi tracking off
 //static notemap******
 //first midi note = 0 every time.
@@ -18,18 +16,6 @@
 //TODO: remove queue?
 //TODO: move all constants and rename
 //todo - rename MAX and put in const file
-
-//**** Example of 5
-//todo debounce midi or adsr?? -- seems like adsr overflow...
-//happens when hit release during attack or decay, but not sustain
-//-goes to max value before ending immediately.
-
-//*** example on 8 
-//if release during attack continues attack but slower, then releases immediate.
-
-
-
-
 
 
 
@@ -41,9 +27,9 @@
 
 #define main
 //#define mod_test
+//#define controls_test	//for now use with mod_test
 #define midi
-#define midi_test
-//#define queue_test //used with main
+//#define midi_test
 //#define dactest
 
 #include "Modulator.h"
@@ -51,6 +37,7 @@
 #include "MM_Note.h"
 #include <SPI.h>
 #include "dac_commands.h"
+#include "Encoder.h"
 
 #include <MIDI.h>
 //#include "notemap.h"
@@ -59,6 +46,8 @@
 
 const int slaveSelectPin = 9;
 const uint8_t NUM_OUTPUTS = 8;
+
+//const int 10,11
 
 const uint8_t OUT_1 = 0;
 const uint8_t OUT_2 = 1;
@@ -72,33 +61,52 @@ const uint8_t OUT_8 = 7;
 bool doUpdate = false;
 
 Modulator *modulators[NUM_OUTPUTS];
+Modulator *inFocusModulator;
 //volatile MM_Queue *outputs = new MM_Queue(10);
-
-const int MAX = 65535;
 
 #ifdef mod_test
 // internal variables
 bool trigger_on = false;                            // simple bool to switch trigger on and off
 unsigned long   t = 0;                              // timestamp: current time
 unsigned long   t_0 = 0;
-unsigned long   trigger_duration = 400000;          // time in 탎
-unsigned long   space_between_triggers = 6000000;    // time in 탎
+unsigned long   trigger_duration = 5000000;          // time in 탎
+unsigned long   space_between_triggers = 4500000;    // time in 탎
 #endif
 
+#ifdef controls_test
+/*byte buttonOneState = LOW;
+int currentEncOneAState;
+int lastEncOneAState;
+int encOneOutput = 0;
+//int encOneBState;
+int counter = 0;
+unsigned long lastButtonOnePress = 0;
+bool encOneButtonPressed = false; */
+//int encOneOutput = 0;
+//Encoder *testEncoder;
+#endif
+
+Encoder *encoderOne;
+Encoder *encoderTwo;
+Encoder *encoderThree;
+Encoder *encoderFour;
 
 #ifdef midi
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial, MIDI);
+#define REDLEDPIN 7
 
 void handleNoteOn(byte channel, byte pitch, byte velocity) {
 	for (int i = 0; i < NUM_OUTPUTS; i++) {
 		modulators[i]->noteOn(channel, pitch, velocity);
 	}
+	digitalWrite(REDLEDPIN, LOW);
 }
 
 void handleNoteOff(byte channel, byte pitch, byte velocity) {
 	for (int i = 0; i < NUM_OUTPUTS; i++) {
 		modulators[i]->noteOff(channel, pitch, velocity);
 	}
+	digitalWrite(REDLEDPIN, HIGH);
 }
 
 
@@ -145,37 +153,11 @@ void tick_func()
 	//}
 }
 
-/////////////////////////////////////////////////////////////////////////
-// Panel interface control routines
-/////////////////////////////////////////////////////////////////////////
-
-/*void check_pots()
-*
-* Read the analog input (tempo control)
-*/
-/*void check_pots()
-{
-	//uint32_t pot_val;
-	//uint32_t calc;
-
-
-	//get this from rotary encoder on interface or from midi depending on mode.
-	//pot_val = analogRead(PIN_TEMPO_POT);
-
-	// Result is 10 bits
-	////calc = (((0x3ff - pot_val) * 75)/1023) + 8;
-	//calc = (((0x3ff - pot_val) * 1800) / 1023) + 25;
-
-	//tempo_delay = calc;
-
-}*/
 
 void sendTempoTick() {
 	//maybe here send a timpo tick to all modulators?
 }
 #endif
-
-
 
 void dacSetup() {
 
@@ -221,27 +203,117 @@ void writeTo(uint8_t n, volatile int val, bool do_final) {
 }
 
 void readInputs() {
+
+	if (digitalRead(BUTTON_SHIFT) == HIGH) {
+
+		if (digitalRead(BUTTON_1) == LOW) {
+			inFocusModulator = modulators[OUT_1];
+		}
+		else if (digitalRead(BUTTON_2) == LOW) {
+			inFocusModulator = modulators[OUT_2];
+		}
+		else if (digitalRead(BUTTON_3) == LOW) {
+			inFocusModulator = modulators[OUT_3];
+		}
+		else if (digitalRead(BUTTON_4) == LOW) {
+			inFocusModulator = modulators[OUT_4];
+		}
+
+		inFocusModulator->control1(encoderOne->getUpdate());
+		inFocusModulator->control2(encoderTwo->getUpdate());
+		inFocusModulator->control3(encoderThree->getUpdate());
+		inFocusModulator->control4(encoderFour->getUpdate());
+	}
+	else {
+		//shift pressed
+		if (digitalRead(BUTTON_1) == LOW) {
+			inFocusModulator = modulators[OUT_5];
+		}
+		else if (digitalRead(BUTTON_2) == LOW) {
+			inFocusModulator = modulators[OUT_6];
+		}
+		else if (digitalRead(BUTTON_3) == LOW) {
+			inFocusModulator = modulators[OUT_7];
+		}
+		else if (digitalRead(BUTTON_4) == LOW) {
+			inFocusModulator = modulators[OUT_8];
+		}
+
+		inFocusModulator->control5(encoderOne->getUpdate());
+		inFocusModulator->control6(encoderTwo->getUpdate());
+		inFocusModulator->control7(encoderThree->getUpdate());
+		inFocusModulator->control8(encoderFour->getUpdate());
+	}
+
+
 #ifdef mod_test
 	adsrReadInputs();
 #endif
+
+
+#ifdef controls_test
+	//encOneOutput += testEncoder->getUpdate();
+	//if (encOneOutput < 0) encOneOutput = 0;
+	//else if (encOneOutput > MAX_DRIVE) encOneOutput = MAX_DRIVE;
+#endif
 }
 
+//Is this still a thing?????
 void update() {
 	doUpdate = true;
 }
 
 void updateOutputs() {
+
 	readInputs();
 
 	for (uint8_t i = OUT_1; i < OUT_8; i++) {
 		writeTo(i, modulators[i]->next(), false);
 	}
+
 	writeTo(OUT_8, modulators[OUT_8]->next(), true);
 
 	/*writeTo(OUT_5, 0, false);
 	writeTo(OUT_6, 13107, false);
 	writeTo(OUT_7, 39321, false);
 	writeTo(OUT_8, 65535, true);*/
+}
+
+void defaultInitialization() {
+	MM_Note *a = new MM_Note();
+	a->init(OUT_1);			//Might need to limit these - as short as possible maybe 2500
+
+	MM_ADSR *b = new MM_ADSR();
+	b->init(MAX_DRIVE, MAX_DRIVE, 30000, MAX_DRIVE, OUT_2);
+
+	MM_ADSR *c = new MM_ADSR();
+	c->init(2000000, 1000000, 40000, 5000000, OUT_3);
+
+	MM_ADSR *d = new MM_ADSR();
+	d->init(500000, 1000000, 50000, 2500000, OUT_4);
+
+	MM_ADSR *h = new MM_ADSR();
+	h->init(1000000, 1000000, 55000, 8000000, OUT_8);
+
+	MM_ADSR *g = new MM_ADSR();
+	g->init(4000000, 700000, 25000, 200000, OUT_7);
+
+	MM_ADSR *f = new MM_ADSR();
+	f->init(100000, 100000, 55000, 10000000, OUT_6);
+
+	MM_ADSR *e = new MM_ADSR();
+	e->init(7000000, 7500000, 10000, 50000, OUT_5);
+
+	modulators[a->getAddr()] = a;
+	modulators[b->getAddr()] = b;
+	modulators[c->getAddr()] = c;
+	modulators[d->getAddr()] = d;
+	modulators[e->getAddr()] = e;
+	modulators[f->getAddr()] = f;
+	modulators[g->getAddr()] = g;
+	modulators[h->getAddr()] = h;
+
+	inFocusModulator = a;
 }
 
 // the setup function runs once when you press reset or power the board
@@ -253,6 +325,18 @@ void setup() {
 	adsrSetup();
 #endif
 
+	//initialize controls
+	encoderOne = new Encoder(RE_1_A, RE_1_B, RE_1_BUTTON);
+	encoderTwo = new Encoder(RE_2_A, RE_2_B, RE_2_BUTTON);
+	encoderThree = new Encoder(RE_3_A, RE_3_B, RE_3_BUTTON);
+	encoderFour = new Encoder(RE_4_A, RE_4_B, RE_4_BUTTON);
+	pinMode(BUTTON_SHIFT, INPUT_PULLUP);
+	pinMode(BUTTON_1, INPUT_PULLUP);
+	pinMode(BUTTON_2, INPUT_PULLUP);
+	pinMode(BUTTON_3, INPUT_PULLUP);
+	pinMode(BUTTON_4, INPUT_PULLUP);
+
+
 #ifdef midi
 	// Initiate MIDI communications, listen to all channels
 // .begin sets the thru mode to on, so we'll have to turn it off if we don't want echo
@@ -260,16 +344,19 @@ void setup() {
 
 	MIDI.turnThruOff();
 
-	// so it is called upon reception of a NoteOn.
-	MIDI.setHandleNoteOn(handleNoteOn);  // Put only the name of the function
-										 // Do the same for NoteOffs
+	MIDI.setHandleNoteOn(handleNoteOn);
+	
 	MIDI.setHandleNoteOff(handleNoteOff);
-#endif // midi
 
+	pinMode(REDLEDPIN, OUTPUT);
+	digitalWrite(REDLEDPIN, HIGH);
+#endif // midi
 
 #ifdef midi_test
 	noteTestSetup();
 #endif
+
+	if (modulators[OUT_1] == NULL) defaultInitialization();
 
 	dacSetup();
 	Timer.getAvailable().attachInterrupt(update).start(50);
@@ -277,9 +364,12 @@ void setup() {
 
 // Not used
 void loop() {
+#ifdef midi
 	MIDI.read();
+#endif
 	updateOutputs();
 }
+
 
 
 #ifdef mod_test
@@ -314,10 +404,10 @@ void adsrReadInputs() {
 void adsrSetup() {
 	//TODO: make these just constructors? try one first
 	MM_ADSR *a = new MM_ADSR();
-	a->init(2000, 1000000, 30000, 1000000, OUT_1);		//Might need to limit these - as short as possible maybe 2500
+	a->init(3000, 1000000, 30000, 1000000, OUT_1);		//Might need to limit these - as short as possible maybe 2500
 
 	MM_ADSR *b = new MM_ADSR();
-	b->init(MAX, MAX, 30000, MAX, OUT_2);
+	b->init(MAX_DRIVE, MAX_DRIVE, 30000, MAX_DRIVE, OUT_2);
 
 	MM_ADSR *c = new MM_ADSR();
 	c->init(2000000, 1000000, 40000, 5000000, OUT_3);
@@ -326,7 +416,7 @@ void adsrSetup() {
 	d->init(500000, 1000000, 50000, 2500000, OUT_4);
 
 	MM_ADSR *h = new MM_ADSR();
-	h->init(5000000, 1000000, 55000, 8000000, OUT_8);
+	h->init(1000000, 1000000, 55000, 8000000, OUT_8);
 
 	MM_ADSR *g = new MM_ADSR();
 	g->init(4000000, 700000, 25000, 200000, OUT_7);
@@ -335,7 +425,7 @@ void adsrSetup() {
 	f->init(100000, 100000, 55000, 10000000, OUT_6);
 
 	MM_ADSR *e = new MM_ADSR();
-	e->init(3000000, 7500000, 10000, 50000, OUT_5);
+	e->init(7000000, 7500000, 10000, 50000, OUT_5);
 
 	modulators[a->getAddr()] = a;
 	modulators[b->getAddr()] = b;
@@ -345,7 +435,20 @@ void adsrSetup() {
 	modulators[f->getAddr()] = f;
 	modulators[g->getAddr()] = g;
 	modulators[h->getAddr()] = h;
+
+	inFocusModulator = a;
+
+	//update controls on in focus
+	//change in focus
 }
+#endif
+
+#ifdef controls_test
+/*void controlsTestSetup() {
+	pinMode(RE_1_A, INPUT);
+	pinMode(RE_1_B, INPUT);
+	pinMode(RE_1_BUTTON, INPUT);
+}*/
 #endif
 
 #ifdef midi_test
@@ -355,7 +458,7 @@ void noteTestSetup() {
 	a->init(OUT_1);		//Might need to limit these - as short as possible maybe 2500
 
 	MM_ADSR *b = new MM_ADSR();
-	b->init(MAX, MAX, 30000, MAX, OUT_2);
+	b->init(MAX_DRIVE, MAX_DRIVE, 30000, MAX_DRIVE, OUT_2);
 
 	MM_ADSR *c = new MM_ADSR();
 	c->init(8000, 1000000, 40000, 50000, OUT_3);
@@ -386,14 +489,6 @@ void noteTestSetup() {
 }
 
 #endif
-
-
-
-
-
-
-
-
 
 #ifdef dactest
 

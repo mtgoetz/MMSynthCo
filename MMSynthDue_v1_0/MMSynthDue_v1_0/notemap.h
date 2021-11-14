@@ -65,7 +65,7 @@ class notemap
     uint8_t getLowest();
 
   private:
-
+	uint8_t lastKey;
     uint8_t keys[16];
     uint8_t numKeys;
 };
