@@ -18,17 +18,10 @@
 //todo - rename MAX and put in const file
 
 
-
-//analog read is 10 bit 1023
-//dac out is 12 bit 4095
-//65535 - 16 bit
-//#define adsr_example
-
-
 #define main
-//#define mod_test
+#define mod_test
 //#define controls_test	//for now use with mod_test
-#define midi
+//#define midi
 //#define midi_test
 //#define dactest
 
@@ -38,6 +31,7 @@
 #include <SPI.h>
 #include "dac_commands.h"
 #include "Encoder.h"
+#include "Button.h"
 
 #include <MIDI.h>
 //#include "notemap.h"
@@ -45,10 +39,8 @@
 //#include "MM_Queue.h"
 
 const int slaveSelectPin = 9;
+
 const uint8_t NUM_OUTPUTS = 8;
-
-//const int 10,11
-
 const uint8_t OUT_1 = 0;
 const uint8_t OUT_2 = 1;
 const uint8_t OUT_3 = 2;
@@ -60,9 +52,22 @@ const uint8_t OUT_8 = 7;
 
 bool doUpdate = false;
 
+bool inMenu = false;
+
 Modulator *modulators[NUM_OUTPUTS];
 Modulator *inFocusModulator;
-//volatile MM_Queue *outputs = new MM_Queue(10);
+
+Encoder *encoderOne;
+Encoder *encoderTwo;
+Encoder *encoderThree;
+Encoder *encoderFour;
+
+Button *buttonMenu;
+Button *buttonShift;
+Button *button1;
+Button *button2;
+Button *button3;
+Button *button4;
 
 #ifdef mod_test
 // internal variables
@@ -72,24 +77,6 @@ unsigned long   t_0 = 0;
 unsigned long   trigger_duration = 5000000;          // time in µs
 unsigned long   space_between_triggers = 4500000;    // time in µs
 #endif
-
-#ifdef controls_test
-/*byte buttonOneState = LOW;
-int currentEncOneAState;
-int lastEncOneAState;
-int encOneOutput = 0;
-//int encOneBState;
-int counter = 0;
-unsigned long lastButtonOnePress = 0;
-bool encOneButtonPressed = false; */
-//int encOneOutput = 0;
-//Encoder *testEncoder;
-#endif
-
-Encoder *encoderOne;
-Encoder *encoderTwo;
-Encoder *encoderThree;
-Encoder *encoderFour;
 
 #ifdef midi
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial, MIDI);
@@ -203,39 +190,27 @@ void writeTo(uint8_t n, volatile int val, bool do_final) {
 }
 
 void readInputs() {
+	bool menuPressed = buttonMenu->pressed();
 
-	if (digitalRead(BUTTON_SHIFT) == HIGH) {
+	if (menuPressed && !inMenu) {
+		//go to menu
 
-		if (digitalRead(BUTTON_1) == LOW) {
-			inFocusModulator = modulators[OUT_1];
-		}
-		else if (digitalRead(BUTTON_2) == LOW) {
-			inFocusModulator = modulators[OUT_2];
-		}
-		else if (digitalRead(BUTTON_3) == LOW) {
-			inFocusModulator = modulators[OUT_3];
-		}
-		else if (digitalRead(BUTTON_4) == LOW) {
-			inFocusModulator = modulators[OUT_4];
-		}
+	} else if (!menuPressed && inMenu) {
+		//leave menu
 
-		inFocusModulator->control1(encoderOne->getUpdate());
-		inFocusModulator->control2(encoderTwo->getUpdate());
-		inFocusModulator->control3(encoderThree->getUpdate());
-		inFocusModulator->control4(encoderFour->getUpdate());
-	}
-	else {
-		//shift pressed
-		if (digitalRead(BUTTON_1) == LOW) {
+	} else if (buttonShift->pressed()) {
+		//shift
+
+		if (button1->pressed()) {
 			inFocusModulator = modulators[OUT_5];
 		}
-		else if (digitalRead(BUTTON_2) == LOW) {
+		else if (button2->pressed()) {
 			inFocusModulator = modulators[OUT_6];
 		}
-		else if (digitalRead(BUTTON_3) == LOW) {
+		else if (button3->pressed()) {
 			inFocusModulator = modulators[OUT_7];
 		}
-		else if (digitalRead(BUTTON_4) == LOW) {
+		else if (button4->pressed()) {
 			inFocusModulator = modulators[OUT_8];
 		}
 
@@ -243,6 +218,27 @@ void readInputs() {
 		inFocusModulator->control6(encoderTwo->getUpdate());
 		inFocusModulator->control7(encoderThree->getUpdate());
 		inFocusModulator->control8(encoderFour->getUpdate());
+
+	} else {
+		//No shift
+
+		if (button1->pressed()) {
+			inFocusModulator = modulators[OUT_1];
+		}
+		else if (button2->pressed()) {
+			inFocusModulator = modulators[OUT_2];
+		}
+		else if (button3->pressed()) {
+			inFocusModulator = modulators[OUT_3];
+		}
+		else if (button4->pressed()) {
+			inFocusModulator = modulators[OUT_4];
+		}
+
+		inFocusModulator->control1(encoderOne->getUpdate());
+		inFocusModulator->control2(encoderTwo->getUpdate());
+		inFocusModulator->control3(encoderThree->getUpdate());
+		inFocusModulator->control4(encoderFour->getUpdate());
 	}
 
 
@@ -277,6 +273,10 @@ void updateOutputs() {
 	writeTo(OUT_6, 13107, false);
 	writeTo(OUT_7, 39321, false);
 	writeTo(OUT_8, 65535, true);*/
+}
+
+void changeModulator() {
+
 }
 
 void defaultInitialization() {
@@ -330,11 +330,12 @@ void setup() {
 	encoderTwo = new Encoder(RE_2_A, RE_2_B, RE_2_BUTTON);
 	encoderThree = new Encoder(RE_3_A, RE_3_B, RE_3_BUTTON);
 	encoderFour = new Encoder(RE_4_A, RE_4_B, RE_4_BUTTON);
-	pinMode(BUTTON_SHIFT, INPUT_PULLUP);
-	pinMode(BUTTON_1, INPUT_PULLUP);
-	pinMode(BUTTON_2, INPUT_PULLUP);
-	pinMode(BUTTON_3, INPUT_PULLUP);
-	pinMode(BUTTON_4, INPUT_PULLUP);
+	buttonMenu = new Button(BUTTON_MENU);
+	buttonShift = new Button(BUTTON_SHIFT);
+	button1 = new Button(BUTTON_1);
+	button2 = new Button(BUTTON_2);
+	button3 = new Button(BUTTON_3);
+	button4 = new Button(BUTTON_4);
 
 
 #ifdef midi
@@ -441,14 +442,6 @@ void adsrSetup() {
 	//update controls on in focus
 	//change in focus
 }
-#endif
-
-#ifdef controls_test
-/*void controlsTestSetup() {
-	pinMode(RE_1_A, INPUT);
-	pinMode(RE_1_B, INPUT);
-	pinMode(RE_1_BUTTON, INPUT);
-}*/
 #endif
 
 #ifdef midi_test

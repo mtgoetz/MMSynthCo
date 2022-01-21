@@ -64,37 +64,47 @@ void MM_Note::noteOff(uint8_t channel, uint8_t pitch, uint8_t velocity) {
 	this->themap.noteOff(pitch);
 }
 
+//Glide
 void MM_Note::control1(int amt) {
 
 }
 
+//Arp on/off
 void MM_Note::control2(int amt) {
 
 }
 
+//Arp type
 void MM_Note::control3(int amt) {
 
 }
 
+//Arp rate
 void MM_Note::control4(int amt) {
 
 }
 
-void MM_Note::control8(int amt) {
-
-}
-
+//Vibrato
 void MM_Note::control5(int amt) {
 
 }
 
+//Priority (global)
 void MM_Note::control6(int amt) {
 
 }
 
+//Fine tune (global) - use static volatile var
 void MM_Note::control7(int amt) {
 
 }
+
+//output type (nix from interface)
+void MM_Note::control8(int amt) {
+
+}
+
+
 
 int MM_Note::getAddr() {
 	return this->dacAddr;

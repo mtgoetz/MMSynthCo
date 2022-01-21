@@ -2,10 +2,10 @@
 #include <stdint.h>
 #include "Modulator.h"
 
-class MM_ADSR : virtual public Modulator
+class MM_LFO : virtual public Modulator
 {
 private:
-
+	uint8_t dacAddr = 0;
 
 	//public section method declarations
 public:

@@ -201,14 +201,6 @@ void MM_ADSR::control1(int amt)
 	this->attack += (amt * TIME_CONTROL_MULT);
 	if (this->attack > MAX_LENGTH) this->attack = MAX_LENGTH;
 	if (this->attack < 0) this->attack = 0;
-
-
-
-	//because increasing the phase means going slower, a smaller increment amount
-	//means a longer phase (increasing the attack time).
-	//aInc -= amt;
-	//if (aInc < 0) aInc = 0;
-	//if (aInc > MAX_DRIVE) aInc = MAX_DRIVE;
 }
 
 //Decay
@@ -217,9 +209,6 @@ void MM_ADSR::control2(int amt)
 	this->decay += (amt * TIME_CONTROL_MULT);
 	if (this->decay > MAX_LENGTH) this->decay = MAX_LENGTH;
 	if (this->decay < 0) this->decay = 0;
-	//dInc -= amt;
-	//if (dInc < 0) dInc = 0;
-	//if (dInc > MAX_DRIVE) dInc = MAX_DRIVE;
 }
 
 //Sustain
@@ -228,9 +217,6 @@ void MM_ADSR::control3(int amt)
 	this->sustain += (amt * DAC_CONTROL_MULT);
 	if (this->sustain > MAX_DRIVE) this->sustain = MAX_DRIVE;
 	if (this->sustain < 0) this->sustain = 0;
-	//sustain += amt;
-	//if (sustain < 0) sustain = 0;
-	//if (sustain > MAX_DRIVE) sustain = MAX_DRIVE;
 }
 
 //Release
@@ -239,30 +225,27 @@ void MM_ADSR::control4(int amt)
 	this->release += (amt * TIME_CONTROL_MULT);
 	if (this->release > MAX_LENGTH) this->release = MAX_LENGTH;
 	if (this->release < 0) this->release = 0;
-	//rInc -= amt;
-	//if (rInc < 0) rInc = 0;
-	//if (rInc > MAX_DRIVE) rInc = MAX_DRIVE;
 }
 
-//Gain
+//Loop mode
 void MM_ADSR::control5(int amt)
 {
-	this->gain += (amt * DAC_CONTROL_MULT);
-	if (this->gain > MAX_DRIVE) this->gain = MAX_DRIVE;
-	if (this->gain < 0) this->gain = 0;
+
 }
 
-//loop mode
+//Inverse
 void MM_ADSR::control6(int amt)
 {
 
 }
 
-//Inverted
+//Unused
 void MM_ADSR::control7(int amt)
 {
-
+	//intentionally blank
 }
+
+
 
 //Module type --- this will be more complex: need to show on screen, need to accept only when shift
 //is released, need main code to do the work so maybe delete this control and manage from main

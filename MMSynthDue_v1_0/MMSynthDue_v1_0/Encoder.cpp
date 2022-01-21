@@ -22,7 +22,7 @@ int Encoder::getUpdate()
 
 	if (this->currentAState != this->lastAState && this->currentAState == 1) {
 
-		if (buttonState == LOW && (millis() - this->lastButtonPressMillis > 50)) {
+		if (buttonState == LOW && (millis() - this->lastButtonPressMillis > debounceDelay)) {
 			updateAmount = ENCODER_BASE_ADJ * ENCODER_PRESSED_MULT;
 		}
 		else {

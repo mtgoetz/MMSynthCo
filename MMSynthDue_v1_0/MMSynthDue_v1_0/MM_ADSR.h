@@ -3,11 +3,11 @@
 #include "Modulator.h"
 #include <Arduino.h>
 #include "Controls.h"
+#include "Constants.h"
 
 #define ADSR_TABLE_SIZE 1024			// number of time points
 #define ATTACK_ALPHA 0.995				// varies between 0.9 (steep curve) and 0.9995 (straight line)
 #define ATTACK_DECAY_RELEASE 0.997		// fits to ARRAY_SIZE 1024
-#define MAX_DRIVE 65535
 #define MAX_LENGTH 10000000				//10 seconds from microseconds
 #define TIME_CONTROL_MULT (MAX_LENGTH / 100)
 #define DAC_CONTROL_MULT (MAX_DRIVE / 100)

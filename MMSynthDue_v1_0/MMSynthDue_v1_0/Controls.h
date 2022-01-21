@@ -25,3 +25,13 @@
 #define BUTTON_2 51
 #define BUTTON_3 52
 #define BUTTON_4 53
+#define BUTTON_MENU 35
+
+int menuButtonState = HIGH;
+int shiftButtonState = HIGH;
+int button1State = HIGH;
+int button2State = HIGH;
+int button3State = HIGH;
+int button4State = HIGH;
+
+const unsigned long debounceDelay = 50;

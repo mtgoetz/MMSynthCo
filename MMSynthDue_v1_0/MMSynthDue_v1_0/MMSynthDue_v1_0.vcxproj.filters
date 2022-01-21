@@ -13,31 +13,28 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\Controls">
+      <UniqueIdentifier>{008a1c99-2291-4fd8-8afa-6bf51391028c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Modulators">
+      <UniqueIdentifier>{82d2e15b-98fd-401e-83d3-51918d086ddd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Controls">
+      <UniqueIdentifier>{b65e0940-33d2-4721-a63a-910cc711c832}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Modulators">
+      <UniqueIdentifier>{9adbd430-565d-45b6-a7f3-0630bc341d28}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="SAM_DUE.Debug.debugger_launch.json" />
     <None Include="MM_FM_ControlUnit.ino" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MM_ADSR.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="notemap.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Modulator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="MM_Queue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dac_commands.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MM_Note.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MM_LFO.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="__vm\MM_FM_ControlUnit.h">
@@ -49,31 +46,55 @@
     <ClInclude Include="__vm\.MMSynthDue_v1_0.vsarduino.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Controls.h">
+    <ClInclude Include="Constants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Button.h">
+      <Filter>Header Files\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="Controls.h">
+      <Filter>Header Files\Controls</Filter>
+    </ClInclude>
     <ClInclude Include="Encoder.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="MM_Note.h">
+      <Filter>Header Files\Modulators</Filter>
+    </ClInclude>
+    <ClInclude Include="Modulator.h">
+      <Filter>Header Files\Modulators</Filter>
+    </ClInclude>
+    <ClInclude Include="MM_LFO.h">
+      <Filter>Header Files\Modulators</Filter>
+    </ClInclude>
+    <ClInclude Include="MM_ADSR.h">
+      <Filter>Header Files\Modulators</Filter>
+    </ClInclude>
+    <ClInclude Include="notemap.h">
+      <Filter>Header Files\Modulators</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MM_ADSR.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="notemap.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MM_Queue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MM_Note.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MM_LFO.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Button.cpp">
+      <Filter>Source Files\Controls</Filter>
     </ClCompile>
     <ClCompile Include="Encoder.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="MM_ADSR.cpp">
+      <Filter>Source Files\Modulators</Filter>
+    </ClCompile>
+    <ClCompile Include="MM_LFO.cpp">
+      <Filter>Source Files\Modulators</Filter>
+    </ClCompile>
+    <ClCompile Include="MM_Note.cpp">
+      <Filter>Source Files\Modulators</Filter>
+    </ClCompile>
+    <ClCompile Include="notemap.cpp">
+      <Filter>Source Files\Modulators</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
