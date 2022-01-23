@@ -6,16 +6,18 @@
 
 
 
-//todo
-//midi tracking off
-//static notemap******
+//todo November 20201
+//midi tracking off?
+//static notemap******, static clock, priority?, note?
 //first midi note = 0 every time.
-//time based lfo
-//notes on demand or isr
-//test rotary encs
 //TODO: remove queue?
 //TODO: move all constants and rename
-//todo - rename MAX and put in const file
+
+//1/23/2022
+//todo clean up
+//todo find crash in switching mods or just lfo?
+//Figure out screen pattern and get to point where you can see any/all settings whether or not they're implemented
+//Fill out modulators
 
 
 #define main
@@ -32,6 +34,8 @@
 #include "dac_commands.h"
 #include "Encoder.h"
 #include "Button.h"
+#include "Screen.h"
+#include "MM_LFO.h"
 
 #include <MIDI.h>
 //#include "notemap.h"
@@ -51,8 +55,12 @@ const uint8_t OUT_7 = 6;
 const uint8_t OUT_8 = 7;
 
 bool doUpdate = false;
-
 bool inMenu = false;
+
+bool inChangeMod = false; //have pressed shift + turned control 8
+bool changeModTickUp = false;	//require 2 ticks/update
+bool changeModTickDown = false;	//require 2 ticks/update
+ModulatorTypes newModulator;	//current selected modulator
 
 Modulator *modulators[NUM_OUTPUTS];
 Modulator *inFocusModulator;
@@ -69,6 +77,8 @@ Button *button2;
 Button *button3;
 Button *button4;
 
+Screen *screen;
+
 #ifdef mod_test
 // internal variables
 bool trigger_on = false;                            // simple bool to switch trigger on and off
@@ -76,6 +86,15 @@ unsigned long   t = 0;                              // timestamp: current time
 unsigned long   t_0 = 0;
 unsigned long   trigger_duration = 5000000;          // time in µs
 unsigned long   space_between_triggers = 4500000;    // time in µs
+#endif
+
+#ifdef controls_test
+int buttonOutput = 0;
+int encoderOneOutput = 0;
+int encoderTwoOutput = 0;
+int encoderThreeOutput = 0;
+int encoderFourOutput = 0;
+bool pressed = false;
 #endif
 
 #ifdef midi
@@ -194,45 +213,69 @@ void readInputs() {
 
 	if (menuPressed && !inMenu) {
 		//go to menu
-
+		inMenu = true;
 	} else if (!menuPressed && inMenu) {
 		//leave menu
-
+		inMenu = false;
 	} else if (buttonShift->pressed()) {
 		//shift
 
 		if (button1->pressed()) {
-			inFocusModulator = modulators[OUT_5];
+			changeFocus(modulators[OUT_5]);
 		}
 		else if (button2->pressed()) {
-			inFocusModulator = modulators[OUT_6];
+			changeFocus(modulators[OUT_6]);
 		}
 		else if (button3->pressed()) {
-			inFocusModulator = modulators[OUT_7];
+			changeFocus(modulators[OUT_7]);
 		}
 		else if (button4->pressed()) {
-			inFocusModulator = modulators[OUT_8];
+			changeFocus(modulators[OUT_8]);
 		}
 
 		inFocusModulator->control5(encoderOne->getUpdate());
 		inFocusModulator->control6(encoderTwo->getUpdate());
 		inFocusModulator->control7(encoderThree->getUpdate());
-		inFocusModulator->control8(encoderFour->getUpdate());
+
+		changeModulator(encoderFour->getUpdate());
+		//inFocusModulator->control8(encoderFour->getUpdate());
 
 	} else {
+		if (inChangeMod) {
+			//do we need to update the array here????
+			if (newModulator == Note) {
+				MM_Note *note = new MM_Note();
+				note->init(inFocusModulator->getAddr());
+				changeFocus(note);
+			}
+			else if (newModulator == ADSR) {
+				MM_ADSR *adsr = new MM_ADSR();
+				adsr->init(inFocusModulator->getAddr());
+				changeFocus(adsr);
+			}
+			else {
+				MM_LFO *lfo = new MM_LFO();
+				lfo->init(inFocusModulator->getAddr());
+				changeFocus(lfo);
+			}
+			modulators[inFocusModulator->getAddr()] = inFocusModulator;
+			inChangeMod = false;
+			changeModTickDown = false;
+			changeModTickUp = false;
+		}
 		//No shift
 
 		if (button1->pressed()) {
-			inFocusModulator = modulators[OUT_1];
+			changeFocus(modulators[OUT_1]);
 		}
 		else if (button2->pressed()) {
-			inFocusModulator = modulators[OUT_2];
+			changeFocus(modulators[OUT_2]);
 		}
 		else if (button3->pressed()) {
-			inFocusModulator = modulators[OUT_3];
+			changeFocus(modulators[OUT_3]);
 		}
 		else if (button4->pressed()) {
-			inFocusModulator = modulators[OUT_4];
+			changeFocus(modulators[OUT_4]);
 		}
 
 		inFocusModulator->control1(encoderOne->getUpdate());
@@ -241,18 +284,61 @@ void readInputs() {
 		inFocusModulator->control4(encoderFour->getUpdate());
 	}
 
-
 #ifdef mod_test
 	adsrReadInputs();
 #endif
 
-
-#ifdef controls_test
-	//encOneOutput += testEncoder->getUpdate();
-	//if (encOneOutput < 0) encOneOutput = 0;
-	//else if (encOneOutput > MAX_DRIVE) encOneOutput = MAX_DRIVE;
-#endif
 }
+
+void changeFocus(Modulator *modulator) {
+	inFocusModulator = modulator;
+	newModulator = inFocusModulator->getType();		//track starting point for change sequence
+}
+
+//not working?
+#ifdef controls_test
+void doControlsTest() {
+
+	if (buttonMenu->pressed() ||
+		buttonShift->pressed() ||
+		button1->pressed() ||
+		button2->pressed() ||
+		button3->pressed() ||
+		button4->pressed()) {
+
+		if (!pressed) {
+			buttonOutput += 13106;
+			if (buttonOutput > MAX_DRIVE) buttonOutput = 0;
+			writeTo(OUT_1, buttonOutput, false);
+		}
+		pressed = true;
+	}
+	else {
+		pressed = false;
+	}
+
+	encoderOneOutput += encoderOne->getUpdate();
+	if (encoderOneOutput < 0) encoderOneOutput = 0;
+	else if (encoderOneOutput > MAX_DRIVE) encoderOneOutput = MAX_DRIVE;
+
+	encoderTwoOutput += encoderTwo->getUpdate();
+	if (encoderTwoOutput < 0) encoderTwoOutput = 0;
+	else if (encoderTwoOutput > MAX_DRIVE) encoderTwoOutput = MAX_DRIVE;
+
+	encoderThreeOutput += encoderThree->getUpdate();
+	if (encoderThreeOutput < 0) encoderThreeOutput = 0;
+	else if (encoderThreeOutput > MAX_DRIVE) encoderThreeOutput = MAX_DRIVE;
+
+	encoderFourOutput += encoderFour->getUpdate();
+	if (encoderFourOutput < 0) encoderFourOutput = 0;
+	else if (encoderFourOutput > MAX_DRIVE) encoderFourOutput = MAX_DRIVE;
+
+	writeTo(OUT_2, encoderOneOutput, false);
+	writeTo(OUT_3, encoderTwoOutput, false);
+	writeTo(OUT_4, encoderThreeOutput, false);
+	writeTo(OUT_5, encoderFourOutput, true);
+}
+#endif
 
 //Is this still a thing?????
 void update() {
@@ -260,7 +346,7 @@ void update() {
 }
 
 void updateOutputs() {
-
+#ifndef controls_test
 	readInputs();
 
 	for (uint8_t i = OUT_1; i < OUT_8; i++) {
@@ -273,15 +359,51 @@ void updateOutputs() {
 	writeTo(OUT_6, 13107, false);
 	writeTo(OUT_7, 39321, false);
 	writeTo(OUT_8, 65535, true);*/
+
+#else
+	doControlsTest();
+#endif // !controls_test
+
+	//screen->blank();
+	screen->draw();
 }
 
-void changeModulator() {
+void changeModulator(int amt) {
+	if (amt > 0) {
+		if (changeModTickUp) {
+			//do thing
+			if (newModulator == Note) newModulator = ADSR;
+			if (newModulator == ADSR) newModulator = LFO;
 
+			changeModTickUp = false;
+
+			inChangeMod = newModulator != inFocusModulator->getType();
+		}
+		else {
+			changeModTickDown = false;
+			changeModTickUp = true;
+		}
+	}
+	else if (amt < 0) {
+		if (changeModTickDown) {
+			//do thing
+			if (newModulator == ADSR) newModulator = Note;
+			if (newModulator == LFO) newModulator = ADSR;
+
+			changeModTickDown = false;
+
+			inChangeMod = newModulator != inFocusModulator->getType();
+		}
+		else {
+			changeModTickUp = false;
+			changeModTickDown = true;
+		}
+	}
 }
 
 void defaultInitialization() {
 	MM_Note *a = new MM_Note();
-	a->init(OUT_1);			//Might need to limit these - as short as possible maybe 2500
+	a->init(OUT_8);			//Might need to limit these - as short as possible maybe 2500
 
 	MM_ADSR *b = new MM_ADSR();
 	b->init(MAX_DRIVE, MAX_DRIVE, 30000, MAX_DRIVE, OUT_2);
@@ -301,8 +423,9 @@ void defaultInitialization() {
 	MM_ADSR *f = new MM_ADSR();
 	f->init(100000, 100000, 55000, 10000000, OUT_6);
 
-	MM_ADSR *e = new MM_ADSR();
-	e->init(7000000, 7500000, 10000, 50000, OUT_5);
+	//LFO on end
+	MM_LFO *e = new MM_LFO();
+	e->init(OUT_5);
 
 	modulators[a->getAddr()] = a;
 	modulators[b->getAddr()] = b;
@@ -313,13 +436,16 @@ void defaultInitialization() {
 	modulators[g->getAddr()] = g;
 	modulators[h->getAddr()] = h;
 
-	inFocusModulator = a;
+	changeFocus(a);
 }
 
 // the setup function runs once when you press reset or power the board
 void setup() {
+	pinMode(TFT_BACKLIGHT_PIN, OUTPUT);
+	digitalWrite(TFT_BACKLIGHT_PIN, LOW);
 
 	delay(100);
+
 
 #ifdef mod_test
 	adsrSetup();
@@ -337,6 +463,11 @@ void setup() {
 	button3 = new Button(BUTTON_3);
 	button4 = new Button(BUTTON_4);
 
+	screen = new Screen();
+	digitalWrite(TFT_BACKLIGHT_PIN, HIGH);
+	screen->blank();
+	delay(100);
+	//screen->draw();
 
 #ifdef midi
 	// Initiate MIDI communications, listen to all channels
@@ -368,7 +499,9 @@ void loop() {
 #ifdef midi
 	MIDI.read();
 #endif
-	updateOutputs();
+	//if (doUpdate) {
+		updateOutputs();
+	//}
 }
 
 
@@ -393,7 +526,7 @@ void adsrReadInputs() {
 	else {
 		if (t > t_0 + space_between_triggers) {            // check if trigger can be switched on
 			for (int i = 0; i < NUM_OUTPUTS; i++) {
-				modulators[i]->noteOn(0, 0, 0);
+				modulators[i]->noteOn(0, 80, 100);
 			}                        // inform ADSR class that note/trigger is switched on
 			//digitalWrite(LED_BUILTIN, HIGH);              // switch on LED
 			t_0 = t;                                      // reset timestamp
@@ -405,7 +538,7 @@ void adsrReadInputs() {
 void adsrSetup() {
 	//TODO: make these just constructors? try one first
 	MM_ADSR *a = new MM_ADSR();
-	a->init(3000, 1000000, 30000, 1000000, OUT_1);		//Might need to limit these - as short as possible maybe 2500
+	a->init(3000, 1000000, 30000, 1000000, OUT_5);		//Might need to limit these - as short as possible maybe 2500
 
 	MM_ADSR *b = new MM_ADSR();
 	b->init(MAX_DRIVE, MAX_DRIVE, 30000, MAX_DRIVE, OUT_2);
@@ -425,8 +558,8 @@ void adsrSetup() {
 	MM_ADSR *f = new MM_ADSR();
 	f->init(100000, 100000, 55000, 10000000, OUT_6);
 
-	MM_ADSR *e = new MM_ADSR();
-	e->init(7000000, 7500000, 10000, 50000, OUT_5);
+	MM_LFO *e = new MM_LFO();
+	e->init(OUT_1);
 
 	modulators[a->getAddr()] = a;
 	modulators[b->getAddr()] = b;
@@ -437,7 +570,7 @@ void adsrSetup() {
 	modulators[g->getAddr()] = g;
 	modulators[h->getAddr()] = h;
 
-	inFocusModulator = a;
+	changeFocus(e);
 
 	//update controls on in focus
 	//change in focus

@@ -113,3 +113,8 @@ int MM_Note::getAddr() {
 void MM_Note::setAddr(uint8_t addr) {
 	this->dacAddr = addr;
 }
+
+ModulatorTypes MM_Note::getType()
+{
+	return Note;
+}

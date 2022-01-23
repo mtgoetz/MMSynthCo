@@ -58,5 +58,5 @@ public:
 	void control7(int amt);
 	int getAddr();
 	void setAddr(uint8_t addr);
-
+	ModulatorTypes getType();
 };

@@ -25,6 +25,12 @@
     <Filter Include="Source Files\Modulators">
       <UniqueIdentifier>{9adbd430-565d-45b6-a7f3-0630bc341d28}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\LCD">
+      <UniqueIdentifier>{3e2f4a53-1588-42c9-8c64-15d11cf10f71}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\LCD">
+      <UniqueIdentifier>{77a1ac1a-0eb8-4997-bb80-8878690212c5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="SAM_DUE.Debug.debugger_launch.json" />
@@ -73,6 +79,9 @@
     <ClInclude Include="notemap.h">
       <Filter>Header Files\Modulators</Filter>
     </ClInclude>
+    <ClInclude Include="Screen.h">
+      <Filter>Header Files\LCD</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MM_Queue.cpp">
@@ -95,6 +104,9 @@
     </ClCompile>
     <ClCompile Include="notemap.cpp">
       <Filter>Source Files\Modulators</Filter>
+    </ClCompile>
+    <ClCompile Include="Screen.cpp">
+      <Filter>Source Files\LCD</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -55,7 +55,6 @@ private:
 
 	//public section method declarations
 public:
-	void init();
 	void init(uint8_t outAddr);
 	void init(unsigned long attack, unsigned long decay, int sustain, unsigned long release, uint8_t outAddr);
 	void init(unsigned long attack, unsigned long decay, int sustain, unsigned long release, uint8_t outAddr, int initial_gain, bool loopMode, bool invert);
@@ -79,4 +78,5 @@ public:
 	void control7(int amt);
 	int getAddr();
 	void setAddr(uint8_t addr);
+	ModulatorTypes getType();
 };

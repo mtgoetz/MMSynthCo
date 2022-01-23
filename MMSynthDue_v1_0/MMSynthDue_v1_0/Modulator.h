@@ -1,12 +1,13 @@
 #pragma once
+enum ModulatorTypes { Note, ADSR, LFO };
+
 class Modulator
 {
+	
 public:
-	//int output;
-	//uint8_t dacAddr;
-	//virtual ~Modulator() {}
 	virtual void setAddr(uint8_t addr) = 0;
 	virtual int getAddr() = 0;
+	virtual ModulatorTypes getType();
 	virtual int next() = 0;
 	virtual volatile void noteOn(uint8_t channel, uint8_t pitch, uint8_t velocity) = 0;
 	virtual void noteOff(uint8_t channel, uint8_t pitch, uint8_t velocity) = 0;

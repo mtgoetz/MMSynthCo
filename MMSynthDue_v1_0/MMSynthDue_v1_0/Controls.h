@@ -1,4 +1,5 @@
 #pragma once
+#include <Arduino.h>
 
 //assume 100 ticks
 #define ENCODER_BASE_ADJ 1
@@ -27,11 +28,16 @@
 #define BUTTON_4 53
 #define BUTTON_MENU 35
 
-int menuButtonState = HIGH;
-int shiftButtonState = HIGH;
-int button1State = HIGH;
-int button2State = HIGH;
-int button3State = HIGH;
-int button4State = HIGH;
+#define TFT_DC_PIN 13
+#define TFT_SD_CS_PIN 12
+#define TFT_LCD_CS_PIN 11
+#define TFT_BACKLIGHT_PIN 10
+
+static int menuButtonState = HIGH;
+static int shiftButtonState = HIGH;
+static int button1State = HIGH;
+static int button2State = HIGH;
+static int button3State = HIGH;
+static int button4State = HIGH;
 
 const unsigned long debounceDelay = 50;

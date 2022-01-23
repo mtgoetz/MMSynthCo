@@ -1,17 +1,8 @@
 #include "MM_ADSR.h"
-//#include <math.h>
-//#include <SoftwareSerial.h>
-
-//SoftwareSerial Serial(10, 11);
-
-void MM_ADSR::init()	//default
-{
-	init(900, 400, 200, 500, 0, MAX_DRIVE, false, false);
-}
 
 void MM_ADSR::init(uint8_t outAddr)	//default with output address
 {
-	init(900, 400, 200, 500, outAddr, MAX_DRIVE, false, false);
+	init(100000, 40000, 25000, 500000, outAddr, MAX_DRIVE, false, false);
 }
 
 void MM_ADSR::init(unsigned long attack, unsigned long decay, int sustain, unsigned long release, uint8_t outAddr) //default to max level for gain
@@ -33,7 +24,7 @@ void MM_ADSR::init(unsigned long attack, unsigned long decay, int sustain, unsig
 	this->dacAddr = outAddr;			//max output to a dac.
 	this->output = 0;
 	this->loopMode = loopMode;
-	this->inverted = invert;																// take 100ms as initial value for Release
+	this->inverted = invert;	
 
 	for (int i = 0; i < ADSR_TABLE_SIZE; i++) {												// Create look-up table for Attack
 		attackTable[i] = i;
@@ -178,6 +169,11 @@ void MM_ADSR::setRelease(unsigned long release)
 void MM_ADSR::setAddr(uint8_t addr)
 {
 	this->dacAddr = addr;
+}
+
+ModulatorTypes MM_ADSR::getType()
+{
+	return ADSR;
 }
 
 int MM_ADSR::getAddr()

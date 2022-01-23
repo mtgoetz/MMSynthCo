@@ -16,14 +16,19 @@ int Encoder::getUpdate()
 {
 	int buttonState = digitalRead(this->buttonPin);
 
-	this->currentAState = digitalRead(pinA);
+	this->currentAState = digitalRead(this->pinA);
 
 	int updateAmount = 0;
 
 	if (this->currentAState != this->lastAState && this->currentAState == 1) {
 
-		if (buttonState == LOW && (millis() - this->lastButtonPressMillis > debounceDelay)) {
-			updateAmount = ENCODER_BASE_ADJ * ENCODER_PRESSED_MULT;
+		if (buttonState == LOW) {
+			if (millis() - this->lastButtonPressMillis > debounceDelay) {
+				updateAmount = ENCODER_BASE_ADJ * ENCODER_PRESSED_MULT;
+			}
+			else {
+				this->lastButtonPressMillis = millis();
+			}
 		}
 		else {
 			updateAmount = ENCODER_BASE_ADJ;

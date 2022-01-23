@@ -2,8 +2,9 @@
 #include "Controls.h"
 #include <stdint.h>
 #include <Arduino.h>
+#include "Button.h"
 
-static const uint8_t ENC_STATES[] = { 0, -1, 1, 0, 1, 0, 0, -1, -1, 0, 0, 1, 0, 1, -1, 0 };
+//static const uint8_t ENC_STATES[] = { 0, -1, 1, 0, 1, 0, 0, -1, -1, 0, 0, 1, 0, 1, -1, 0 };
 
 class Encoder {
 
