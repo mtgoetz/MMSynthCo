@@ -11,11 +11,10 @@
 //static notemap******, static clock, priority?, note?
 //first midi note = 0 every time.
 //TODO: remove queue?
-//TODO: move all constants and rename
 
 //1/23/2022
-//todo clean up
 //todo find crash in switching mods or just lfo?
+//todo: fix volatile usages
 //Figure out screen pattern and get to point where you can see any/all settings whether or not they're implemented
 //Fill out modulators
 
@@ -27,41 +26,30 @@
 //#define midi_test
 //#define dactest
 
-#include "Modulator.h"
-#include "MM_ADSR.h"
-#include "MM_Note.h"
+
 #include <SPI.h>
+#include <MIDI.h>
+#include <DueTimer.h>
+#include <Arduino.h>
+
 #include "dac_commands.h"
 #include "Encoder.h"
 #include "Button.h"
 #include "Screen.h"
 #include "MM_LFO.h"
-
-#include <MIDI.h>
-//#include "notemap.h"
-#include <DueTimer.h>
-//#include "MM_Queue.h"
-
-const int slaveSelectPin = 9;
-
-const uint8_t NUM_OUTPUTS = 8;
-const uint8_t OUT_1 = 0;
-const uint8_t OUT_2 = 1;
-const uint8_t OUT_3 = 2;
-const uint8_t OUT_4 = 3;
-const uint8_t OUT_5 = 4;
-const uint8_t OUT_6 = 5;
-const uint8_t OUT_7 = 6;
-const uint8_t OUT_8 = 7;
+#include "Modulator.h"
+#include "MM_ADSR.h"
+#include "MM_Note.h"
+#include "Constants.h"
+#include "MM_Utils.h"
 
 bool doUpdate = false;
 bool inMenu = false;
-
 bool inChangeMod = false; //have pressed shift + turned control 8
 bool changeModTickUp = false;	//require 2 ticks/update
 bool changeModTickDown = false;	//require 2 ticks/update
-ModulatorTypes newModulator;	//current selected modulator
 
+ModulatorTypes newModulator;	//current selected modulator
 Modulator *modulators[NUM_OUTPUTS];
 Modulator *inFocusModulator;
 
@@ -79,23 +67,7 @@ Button *button4;
 
 Screen *screen;
 
-#ifdef mod_test
-// internal variables
-bool trigger_on = false;                            // simple bool to switch trigger on and off
-unsigned long   t = 0;                              // timestamp: current time
-unsigned long   t_0 = 0;
-unsigned long   trigger_duration = 5000000;          // time in 탎
-unsigned long   space_between_triggers = 4500000;    // time in 탎
-#endif
-
-#ifdef controls_test
-int buttonOutput = 0;
-int encoderOneOutput = 0;
-int encoderTwoOutput = 0;
-int encoderThreeOutput = 0;
-int encoderFourOutput = 0;
-bool pressed = false;
-#endif
+MM_Utils* utils;
 
 #ifdef midi
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial, MIDI);
@@ -164,6 +136,25 @@ void sendTempoTick() {
 	//maybe here send a timpo tick to all modulators?
 }
 #endif
+
+#ifdef mod_test
+// internal variables
+bool trigger_on = false;                            // simple bool to switch trigger on and off
+unsigned long   t = 0;                              // timestamp: current time
+unsigned long   t_0 = 0;
+unsigned long   trigger_duration = 5000000;          // time in 탎
+unsigned long   space_between_triggers = 4500000;    // time in 탎
+#endif
+
+#ifdef controls_test
+int buttonOutput = 0;
+int encoderOneOutput = 0;
+int encoderTwoOutput = 0;
+int encoderThreeOutput = 0;
+int encoderFourOutput = 0;
+bool pressed = false;
+#endif
+
 
 void dacSetup() {
 
@@ -295,51 +286,6 @@ void changeFocus(Modulator *modulator) {
 	newModulator = inFocusModulator->getType();		//track starting point for change sequence
 }
 
-//not working?
-#ifdef controls_test
-void doControlsTest() {
-
-	if (buttonMenu->pressed() ||
-		buttonShift->pressed() ||
-		button1->pressed() ||
-		button2->pressed() ||
-		button3->pressed() ||
-		button4->pressed()) {
-
-		if (!pressed) {
-			buttonOutput += 13106;
-			if (buttonOutput > MAX_DRIVE) buttonOutput = 0;
-			writeTo(OUT_1, buttonOutput, false);
-		}
-		pressed = true;
-	}
-	else {
-		pressed = false;
-	}
-
-	encoderOneOutput += encoderOne->getUpdate();
-	if (encoderOneOutput < 0) encoderOneOutput = 0;
-	else if (encoderOneOutput > MAX_DRIVE) encoderOneOutput = MAX_DRIVE;
-
-	encoderTwoOutput += encoderTwo->getUpdate();
-	if (encoderTwoOutput < 0) encoderTwoOutput = 0;
-	else if (encoderTwoOutput > MAX_DRIVE) encoderTwoOutput = MAX_DRIVE;
-
-	encoderThreeOutput += encoderThree->getUpdate();
-	if (encoderThreeOutput < 0) encoderThreeOutput = 0;
-	else if (encoderThreeOutput > MAX_DRIVE) encoderThreeOutput = MAX_DRIVE;
-
-	encoderFourOutput += encoderFour->getUpdate();
-	if (encoderFourOutput < 0) encoderFourOutput = 0;
-	else if (encoderFourOutput > MAX_DRIVE) encoderFourOutput = MAX_DRIVE;
-
-	writeTo(OUT_2, encoderOneOutput, false);
-	writeTo(OUT_3, encoderTwoOutput, false);
-	writeTo(OUT_4, encoderThreeOutput, false);
-	writeTo(OUT_5, encoderFourOutput, true);
-}
-#endif
-
 //Is this still a thing?????
 void update() {
 	doUpdate = true;
@@ -349,11 +295,13 @@ void updateOutputs() {
 #ifndef controls_test
 	readInputs();
 
+	unsigned long microSeconds = micros();
+
 	for (uint8_t i = OUT_1; i < OUT_8; i++) {
-		writeTo(i, modulators[i]->next(), false);
+		writeTo(i, modulators[i]->next(microSeconds), false);
 	}
 
-	writeTo(OUT_8, modulators[OUT_8]->next(), true);
+	writeTo(OUT_8, modulators[OUT_8]->next(microSeconds), true);
 
 	/*writeTo(OUT_5, 0, false);
 	writeTo(OUT_6, 13107, false);
@@ -446,11 +394,6 @@ void setup() {
 
 	delay(100);
 
-
-#ifdef mod_test
-	adsrSetup();
-#endif
-
 	//initialize controls
 	encoderOne = new Encoder(RE_1_A, RE_1_B, RE_1_BUTTON);
 	encoderTwo = new Encoder(RE_2_A, RE_2_B, RE_2_BUTTON);
@@ -469,6 +412,19 @@ void setup() {
 	delay(100);
 	//screen->draw();
 
+	if (modulators[OUT_1] == NULL) defaultInitialization();
+
+	dacSetup();
+
+	utils = new MM_Utils();
+
+	//TODO test if this is even in use
+	Timer.getAvailable().attachInterrupt(update).start(50);
+
+
+#ifdef mod_test
+	adsrSetup();
+#endif
 #ifdef midi
 	// Initiate MIDI communications, listen to all channels
 // .begin sets the thru mode to on, so we'll have to turn it off if we don't want echo
@@ -483,18 +439,11 @@ void setup() {
 	pinMode(REDLEDPIN, OUTPUT);
 	digitalWrite(REDLEDPIN, HIGH);
 #endif // midi
-
 #ifdef midi_test
 	noteTestSetup();
 #endif
-
-	if (modulators[OUT_1] == NULL) defaultInitialization();
-
-	dacSetup();
-	Timer.getAvailable().attachInterrupt(update).start(50);
 }
 
-// Not used
 void loop() {
 #ifdef midi
 	MIDI.read();
@@ -506,6 +455,7 @@ void loop() {
 
 
 
+//Testing functions
 #ifdef mod_test
 void adsrReadInputs() {
 	t = micros();
@@ -654,6 +604,51 @@ void setup() {
 void loop() {
 }
 
+#endif
+
+//not working?
+#ifdef controls_test
+void doControlsTest() {
+
+	if (buttonMenu->pressed() ||
+		buttonShift->pressed() ||
+		button1->pressed() ||
+		button2->pressed() ||
+		button3->pressed() ||
+		button4->pressed()) {
+
+		if (!pressed) {
+			buttonOutput += 13106;
+			if (buttonOutput > MAX_DRIVE) buttonOutput = 0;
+			writeTo(OUT_1, buttonOutput, false);
+		}
+		pressed = true;
+	}
+	else {
+		pressed = false;
+	}
+
+	encoderOneOutput += encoderOne->getUpdate();
+	if (encoderOneOutput < 0) encoderOneOutput = 0;
+	else if (encoderOneOutput > MAX_DRIVE) encoderOneOutput = MAX_DRIVE;
+
+	encoderTwoOutput += encoderTwo->getUpdate();
+	if (encoderTwoOutput < 0) encoderTwoOutput = 0;
+	else if (encoderTwoOutput > MAX_DRIVE) encoderTwoOutput = MAX_DRIVE;
+
+	encoderThreeOutput += encoderThree->getUpdate();
+	if (encoderThreeOutput < 0) encoderThreeOutput = 0;
+	else if (encoderThreeOutput > MAX_DRIVE) encoderThreeOutput = MAX_DRIVE;
+
+	encoderFourOutput += encoderFour->getUpdate();
+	if (encoderFourOutput < 0) encoderFourOutput = 0;
+	else if (encoderFourOutput > MAX_DRIVE) encoderFourOutput = MAX_DRIVE;
+
+	writeTo(OUT_2, encoderOneOutput, false);
+	writeTo(OUT_3, encoderTwoOutput, false);
+	writeTo(OUT_4, encoderThreeOutput, false);
+	writeTo(OUT_5, encoderFourOutput, true);
+}
 #endif
 
 //#endif // !adsr_example

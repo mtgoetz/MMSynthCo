@@ -26,15 +26,12 @@ private:
 	LFOShapes currentShape = triangle;
 	LFOShapes newShape = triangle;
 	bool shapeTick = false;
-	//uint16_t output = 0;
 	uint16_t squareTable[LUT_SIZE];
 	uint16_t triangleTable[LUT_SIZE];
 	uint16_t sawtoothTable[LUT_SIZE];
 	unsigned long periodLength = 1000000;
 	double frequency = 1 / periodLength;
 	unsigned long periodMicros = 0;
-	
-	int next(unsigned long micros);
 
 public:
 	void init(uint8_t outAddr);
@@ -42,7 +39,7 @@ public:
 	String getShape();
 
 	//Modulator method declarations
-	int next();
+	int next(unsigned long micros);
 	//todo fix volatile
 	virtual volatile void noteOn(uint8_t channel, uint8_t pitch, uint8_t velocity);
 	virtual void noteOff(uint8_t channel, uint8_t pitch, uint8_t velocity);

@@ -29,9 +29,6 @@ void MM_LFO::init(uint8_t outAddr, unsigned long cycleTime, LFOShapes shape)
 }
 
 //Modulator method declarations
-int MM_LFO::next() {
-	return this->next(micros());
-}
 
 int MM_LFO::next(unsigned long micros) {
 
@@ -79,7 +76,6 @@ void MM_LFO::control1(int amt) {
 		if (this->periodLength > MAX_PERIOD) {
 			this->periodLength = MAX_PERIOD;
 			this->frequency = 1.0 / this->periodLength;
-			if (this.)
 		}
 		else if (this->periodLength < MIN_PERIOD) {
 			this->periodLength = MIN_PERIOD;

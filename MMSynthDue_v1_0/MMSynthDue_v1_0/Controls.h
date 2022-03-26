@@ -33,11 +33,11 @@
 #define TFT_LCD_CS_PIN 11
 #define TFT_BACKLIGHT_PIN 10
 
-static int menuButtonState = HIGH;
-static int shiftButtonState = HIGH;
-static int button1State = HIGH;
-static int button2State = HIGH;
-static int button3State = HIGH;
-static int button4State = HIGH;
+//static int menuButtonState = HIGH;
+//static int shiftButtonState = HIGH;
+//static int button1State = HIGH;
+//static int button2State = HIGH;
+//static int button3State = HIGH;
+//static int button4State = HIGH;
 
 const unsigned long debounceDelay = 50;

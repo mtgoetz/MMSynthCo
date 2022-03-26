@@ -6,7 +6,7 @@ void MM_Note::init(uint8_t outAddr) {
 }
 
 //Modulator method declarations
-int MM_Note::next() {
+int MM_Note::next(unsigned long micros) {	//todo: micros ignored for now...prob need for arp tho
 	uint8_t key;
 
 	key = this->themap.whichKey();

@@ -82,6 +82,9 @@
     <ClInclude Include="Screen.h">
       <Filter>Header Files\LCD</Filter>
     </ClInclude>
+    <ClInclude Include="MM_Utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MM_Queue.cpp">
@@ -107,6 +110,9 @@
     </ClCompile>
     <ClCompile Include="Screen.cpp">
       <Filter>Source Files\LCD</Filter>
+    </ClCompile>
+    <ClCompile Include="MM_Utils.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

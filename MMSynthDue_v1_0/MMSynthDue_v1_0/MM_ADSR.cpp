@@ -53,12 +53,8 @@ void MM_ADSR::init(unsigned long attack, unsigned long decay, int sustain, unsig
 	}
 }
 
-int MM_ADSR::next()
-{
-	getWave(micros());
-}
 
-int MM_ADSR::getWave(unsigned long micros)
+int MM_ADSR::next(unsigned long micros)
 {
 	unsigned long delta = 0;
 	if (this->noteOffMicros < this->noteOnMicros) {			// if note is pressed

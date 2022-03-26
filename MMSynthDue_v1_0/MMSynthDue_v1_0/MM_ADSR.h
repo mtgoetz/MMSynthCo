@@ -48,7 +48,6 @@ private:
 
 	void noteOn(unsigned long micros);
 	void noteOff(unsigned long micros);
-	int getWave(unsigned long micros);
 
 	//todo: remove?
 	//int mapRange(int val);
@@ -65,7 +64,7 @@ public:
 	bool toggleInversion();
 
 	//Modulator method declarations
-	int next();
+	int next(unsigned long micros);
 	virtual volatile void noteOn(uint8_t channel, uint8_t pitch, uint8_t velocity);
 	virtual void noteOff(uint8_t channel, uint8_t pitch, uint8_t velocity);
 	void control1(int amt);
