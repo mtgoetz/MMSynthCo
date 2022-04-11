@@ -40,9 +40,8 @@ public:
 
 	//Modulator method declarations
 	int next(unsigned long micros);
-	//todo fix volatile
-	virtual volatile void noteOn(uint8_t channel, uint8_t pitch, uint8_t velocity);
-	virtual void noteOff(uint8_t channel, uint8_t pitch, uint8_t velocity);
+	void noteOn(uint8_t channel, uint8_t pitch, uint8_t velocity);
+	void noteOff(uint8_t channel, uint8_t pitch, uint8_t velocity);
 	void control1(int amt);
 	void control2(int amt);
 	void control3(int amt);

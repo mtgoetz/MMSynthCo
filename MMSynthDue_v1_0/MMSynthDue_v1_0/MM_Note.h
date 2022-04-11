@@ -6,7 +6,7 @@ class MM_Note : virtual public Modulator {
 
 private:
 
-	uint8_t dacAddr = 0;
+	volatile uint8_t dacAddr = 0;
 
 	// notetracker knows which note ons & offs we have seen.
 	// We refer to it when it's time to generate CV and gate signals,
@@ -38,7 +38,7 @@ private:
 	// times 100 for some extra calculation precision = 6826
 	static const uint32_t DAC_CAL = 109227;
 
-	uint32_t fineTune;
+	volatile uint32_t fineTune;
 
 public:
 
@@ -46,8 +46,8 @@ public:
 
 	//Modulator method declarations
 	int next(unsigned long micros);
-	virtual volatile void noteOn(uint8_t channel, uint8_t pitch, uint8_t velocity);
-	virtual void noteOff(uint8_t channel, uint8_t pitch, uint8_t velocity);
+	void noteOn(uint8_t channel, uint8_t pitch, uint8_t velocity);
+	void noteOff(uint8_t channel, uint8_t pitch, uint8_t velocity);
 	void control1(int amt);
 	void control2(int amt);
 	void control3(int amt);

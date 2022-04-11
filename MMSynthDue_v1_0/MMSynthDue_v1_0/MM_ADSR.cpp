@@ -93,7 +93,7 @@ int MM_ADSR::next(unsigned long micros)
 	return this->output;
 }
 
-volatile void MM_ADSR::noteOn(uint8_t channel, uint8_t pitch, uint8_t velocity)
+void MM_ADSR::noteOn(uint8_t channel, uint8_t pitch, uint8_t velocity)
 {
 	//could do something with velocity here
 	this->noteOn(micros());

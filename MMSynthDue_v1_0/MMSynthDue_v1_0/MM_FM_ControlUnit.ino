@@ -16,6 +16,9 @@
 //Figure out screen pattern and get to point where you can see any/all settings whether or not they're implemented
 //Fill out modulators
 
+//4/10/22
+// ** todo -> figure out need for volatile *** or look at stack page talking about why this doesn't work and what to do instead.
+
 
 #include <SPI.h>
 #include <MIDI.h>
@@ -33,13 +36,13 @@
 #include "Constants.h"
 #include "MM_Utils.h"
 
-bool doUpdate = false;
-bool inMenu = false;
-bool inChangeMod = false; //have pressed shift + turned control 8
-bool changeModTickUp = false;	//require 2 ticks/update
-bool changeModTickDown = false;	//require 2 ticks/update
+volatile bool doUpdate = false;
+volatile bool inMenu = false;
+volatile bool inChangeMod = false; //have pressed shift + turned control 8
+volatile bool changeModTickUp = false;	//require 2 ticks/update
+volatile bool changeModTickDown = false;	//require 2 ticks/update
 
-ModulatorTypes newModulator;	//current selected modulator
+volatile ModulatorTypes newModulator;	//current selected modulator
 Modulator *modulators[NUM_OUTPUTS];
 Modulator *inFocusModulator;
 

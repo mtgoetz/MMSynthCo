@@ -49,9 +49,6 @@ private:
 	void noteOn(unsigned long micros);
 	void noteOff(unsigned long micros);
 
-	//todo: remove?
-	//int mapRange(int val);
-
 	//public section method declarations
 public:
 	void init(uint8_t outAddr);
@@ -65,8 +62,8 @@ public:
 
 	//Modulator method declarations
 	int next(unsigned long micros);
-	virtual volatile void noteOn(uint8_t channel, uint8_t pitch, uint8_t velocity);
-	virtual void noteOff(uint8_t channel, uint8_t pitch, uint8_t velocity);
+	void noteOn(uint8_t channel, uint8_t pitch, uint8_t velocity);
+	void noteOff(uint8_t channel, uint8_t pitch, uint8_t velocity);
 	void control1(int amt);
 	void control2(int amt);
 	void control3(int amt);

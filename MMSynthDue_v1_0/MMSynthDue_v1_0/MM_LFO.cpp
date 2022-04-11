@@ -56,7 +56,7 @@ int MM_LFO::next(unsigned long micros) {
 	}
 }
 
-volatile void MM_LFO::noteOn(uint8_t channel, uint8_t pitch, uint8_t velocity) {
+void MM_LFO::noteOn(uint8_t channel, uint8_t pitch, uint8_t velocity) {
 
 }
 
