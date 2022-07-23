@@ -18,6 +18,11 @@
 
 //4/10/22
 // ** todo -> figure out need for volatile *** or look at stack page talking about why this doesn't work and what to do instead.
+// ********************************************************
+// ********** do we need global bpm on every machine??? -> check design notes for this one.
+
+//to test -> all of lfo
+//menu hold, when applicable
 
 
 #include <SPI.h>
@@ -41,6 +46,7 @@ volatile bool inMenu = false;
 volatile bool inChangeMod = false; //have pressed shift + turned control 8
 volatile bool changeModTickUp = false;	//require 2 ticks/update
 volatile bool changeModTickDown = false;	//require 2 ticks/update
+volatile bool menuHold = false;
 
 volatile ModulatorTypes newModulator;	//current selected modulator
 Modulator *modulators[NUM_OUTPUTS];
@@ -177,6 +183,10 @@ void writeTo(uint8_t n, volatile int val, bool do_final) {
 void readInputs() {
 	bool menuPressed = buttonMenu->pressed();
 
+	//todo implement hold menu
+	//quick click = stay in -> < 1 seconds
+	//hold = leave when butten released
+	//menuHold...
 	if (menuPressed && !inMenu) {
 		//go to menu
 		inMenu = true;
@@ -296,8 +306,8 @@ void changeModulator(int amt) {
 	else if (amt < 0) {
 		if (changeModTickDown) {
 			//do thing
-			if (newModulator == ADSR) newModulator = Note;
 			if (newModulator == LFO) newModulator = ADSR;
+			if (newModulator == ADSR) newModulator = Note;
 
 			changeModTickDown = false;
 
@@ -331,10 +341,13 @@ void defaultInitialization() {
 
 	MM_ADSR *f = new MM_ADSR();
 	f->init(100000, 100000, 55000, 10000000, OUT_6);
+	
+	MM_ADSR *e = new MM_ADSR();
+	e->init(100000, 100000, 55000, 10000000, OUT_6);
 
 	//LFO on end
-	MM_LFO *e = new MM_LFO();
-	e->init(OUT_5);
+	//MM_LFO *e = new MM_LFO();
+//	e->init(OUT_5);
 
 	modulators[a->getAddr()] = a;
 	modulators[b->getAddr()] = b;

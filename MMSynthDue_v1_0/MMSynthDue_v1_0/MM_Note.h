@@ -1,10 +1,12 @@
 #pragma once
 #include "notemap.h"
 #include "Modulator.h"
+#include "Constants.h"
 
 class MM_Note : virtual public Modulator {
 
 private:
+	float bpm;
 
 	volatile uint8_t dacAddr = 0;
 
@@ -59,4 +61,6 @@ public:
 	int getAddr();
 	void setAddr(uint8_t addr);
 	ModulatorTypes getType();
+	void setBPM(float bpm);
+	float getBPM();
 };

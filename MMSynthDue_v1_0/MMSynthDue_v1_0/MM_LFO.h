@@ -1,14 +1,17 @@
 #pragma once
+//still need these???     *****
 #include <stdint.h>
 #include <Arduino.h>
 #include "Modulator.h"
 #include "Constants.h"
 
-#define MAX_PERIOD 10000000 //10 seconds
-#define MIN_PERIOD 16666
-#define LUT_SIZE 1000
-#define ADJ_RESOLUTION 0.0000005
-#define SHAPES_SIZE 4
+#include "lfo.h"
+
+//#define MAX_PERIOD 10000000 //10 seconds
+//#define MIN_PERIOD 16666
+//#define LUT_SIZE 1000
+#define ADJ_RESOLUTION 0.5	//in bpm land
+//#define SHAPES_SIZE 4
 
 
 //TODO *******
@@ -21,22 +24,33 @@ class MM_LFO : virtual public Modulator
 {
 
 private:
-	enum LFOShapes { square, triangle, sawtooth, reverseSawtooth };
+	enum LFOShapes { off, triangle, sine, square, saw, size };
+	enum SyncModes { free, sync };		//todo -> make this a control ***
+	ClockSources clockSource = ClockSources::cs_free;
+
+	lfo *thunderzLfo;
+	//int frequency = 30;
+	bool retriggerMode = false;
 	uint8_t dacAddr = 0;
-	LFOShapes currentShape = triangle;
-	LFOShapes newShape = triangle;
-	bool shapeTick = false;
-	uint16_t squareTable[LUT_SIZE];
-	uint16_t triangleTable[LUT_SIZE];
-	uint16_t sawtoothTable[LUT_SIZE];
-	unsigned long periodLength = 1000000;
-	double frequency = 1 / periodLength;
-	unsigned long periodMicros = 0;
+	LFOShapes currentShape = LFOShapes::triangle;
+	//LFOShapes newShape = LFOShapes::triangle;
+	//bool shapeTick = false;
+	//uint16_t squareTable[LUT_SIZE];
+	//uint16_t triangleTable[LUT_SIZE];
+	//uint16_t sawtoothTable[LUT_SIZE];
+	//unsigned long periodLength = 1000000;		//todo, not sure if we need this calculation anymore
+	float bpm = 120;
+	float frequency = bpm / 60;
+	//unsigned long periodMicros = 0;
+	void setFrequency(float frequency);
 
 public:
 	void init(uint8_t outAddr);
-	void init(uint8_t outAddr, unsigned long frequency, LFOShapes shape);
+	void init(uint8_t outAddr, unsigned int frequency, LFOShapes shape);
 	String getShape();
+	float getBPM();
+	void setClockSource(ClockSources source);
+	int getClockSource();
 
 	//Modulator method declarations
 	int next(unsigned long micros);
@@ -52,5 +66,6 @@ public:
 	void control7(int amt);
 	int getAddr();
 	void setAddr(uint8_t addr);
+	void setBPM(float bpm);
 	ModulatorTypes getType();
 };

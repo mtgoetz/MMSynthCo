@@ -118,3 +118,15 @@ ModulatorTypes MM_Note::getType()
 {
 	return Note;
 }
+
+void MM_Note::setBPM(float bpm)
+{
+	if (bpm < MIN_BPM) bpm = MIN_BPM;
+	if (bpm > MAX_BPM) bpm = MAX_BPM;
+	this->bpm = bpm;
+}
+
+float MM_Note::getBPM()
+{
+	return this->bpm;
+}

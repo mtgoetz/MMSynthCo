@@ -8,6 +8,8 @@ public:
 	virtual void setAddr(uint8_t addr) = 0;
 	virtual int getAddr() = 0;
 	virtual ModulatorTypes getType();
+	virtual void setBPM(float BPM);
+	virtual float getBPM();
 	virtual int next(unsigned long micros) = 0;
 	virtual void noteOn(uint8_t channel, uint8_t pitch, uint8_t velocity) = 0;
 	virtual void noteOff(uint8_t channel, uint8_t pitch, uint8_t velocity) = 0;

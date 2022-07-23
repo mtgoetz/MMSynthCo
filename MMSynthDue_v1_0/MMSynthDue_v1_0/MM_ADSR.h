@@ -15,6 +15,7 @@
 class MM_ADSR : virtual public Modulator
 {
 private:
+	float bpm = 120;
 	int attackTable[ADSR_TABLE_SIZE];
 	int decayReleaseTable[ADSR_TABLE_SIZE];
 
@@ -75,4 +76,6 @@ public:
 	int getAddr();
 	void setAddr(uint8_t addr);
 	ModulatorTypes getType();
+	void setBPM(float BPM);
+	float getBPM();
 };

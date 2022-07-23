@@ -31,6 +31,12 @@
     <Filter Include="Header Files\LCD">
       <UniqueIdentifier>{77a1ac1a-0eb8-4997-bb80-8878690212c5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Lib">
+      <UniqueIdentifier>{2a856906-c448-4d23-bd73-aa1972c45ec1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Lib">
+      <UniqueIdentifier>{ed237d2b-539d-4b5a-92c0-931f38c61238}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="SAM_DUE.Debug.debugger_launch.json" />
@@ -85,6 +91,9 @@
     <ClInclude Include="MM_Utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\mo-thunders-lfo\lfo\lfo.h">
+      <Filter>Header Files\Lib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MM_Queue.cpp">
@@ -113,6 +122,9 @@
     </ClCompile>
     <ClCompile Include="MM_Utils.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\mo-thunders-lfo\lfo\lfo.cpp">
+      <Filter>Source Files\Lib</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

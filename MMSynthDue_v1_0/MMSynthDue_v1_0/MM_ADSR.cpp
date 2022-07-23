@@ -172,6 +172,18 @@ ModulatorTypes MM_ADSR::getType()
 	return ADSR;
 }
 
+void MM_ADSR::setBPM(float bpm)
+{
+	if (bpm < MIN_BPM) bpm = MIN_BPM;
+	if (bpm > MAX_BPM) bpm = MAX_BPM;
+	this->bpm = bpm;
+}
+
+float MM_ADSR::getBPM()
+{
+	return this->bpm;
+}
+
 int MM_ADSR::getAddr()
 {
 	return this->dacAddr;
