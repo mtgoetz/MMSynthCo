@@ -9,7 +9,7 @@ public:
 	virtual int getAddr() = 0;
 	virtual ModulatorTypes getType();
 	virtual int next(unsigned long micros) = 0;
-	virtual volatile void noteOn(uint8_t channel, uint8_t pitch, uint8_t velocity) = 0;
+	virtual void noteOn(uint8_t channel, uint8_t pitch, uint8_t velocity) = 0;
 	virtual void noteOff(uint8_t channel, uint8_t pitch, uint8_t velocity) = 0;
 	virtual void control1(int amt) = 0;
 	virtual void control2(int amt) = 0;

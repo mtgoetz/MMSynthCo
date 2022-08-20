@@ -2,6 +2,9 @@
 
 Screen::Screen()
 {
+	if (&tft == nullptr) {
+		tft = Adafruit_ILI9341(TFT_LCD_CS_PIN, TFT_DC_PIN);
+	}
 	tft.begin();
 	tft.setRotation(3);
 }
@@ -20,5 +23,19 @@ void Screen::blank() {
 }
 
 void Screen::green() {
-	tft.fillScreen(ILI9341_CYAN);
+	tft.fillScreen(ILI9341_GREEN);
+}
+
+void Screen::blue() {
+	tft.fillScreen(ILI9341_BLUE);
+}
+
+void Screen::red()
+{
+	tft.fillScreen(ILI9341_RED);
+}
+
+void Screen::drawText(const char* text)
+{
+	tft.write(text, strlen(text));
 }

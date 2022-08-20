@@ -31,6 +31,12 @@
     <Filter Include="Header Files\LCD">
       <UniqueIdentifier>{77a1ac1a-0eb8-4997-bb80-8878690212c5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Lib">
+      <UniqueIdentifier>{a99db633-8320-46d1-a742-5304983df2f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Lib">
+      <UniqueIdentifier>{a2c70f2f-468d-4eae-9d2e-8b212503baa8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="SAM_DUE.Debug.debugger_launch.json" />
@@ -76,14 +82,17 @@
     <ClInclude Include="MM_ADSR.h">
       <Filter>Header Files\Modulators</Filter>
     </ClInclude>
-    <ClInclude Include="notemap.h">
-      <Filter>Header Files\Modulators</Filter>
-    </ClInclude>
     <ClInclude Include="Screen.h">
       <Filter>Header Files\LCD</Filter>
     </ClInclude>
     <ClInclude Include="MM_Utils.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lfo.h">
+      <Filter>Header Files\Lib</Filter>
+    </ClInclude>
+    <ClInclude Include="notemap.h">
+      <Filter>Header Files\Lib</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -105,14 +114,17 @@
     <ClCompile Include="MM_Note.cpp">
       <Filter>Source Files\Modulators</Filter>
     </ClCompile>
-    <ClCompile Include="notemap.cpp">
-      <Filter>Source Files\Modulators</Filter>
-    </ClCompile>
     <ClCompile Include="Screen.cpp">
       <Filter>Source Files\LCD</Filter>
     </ClCompile>
     <ClCompile Include="MM_Utils.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lfo.cpp">
+      <Filter>Source Files\Lib</Filter>
+    </ClCompile>
+    <ClCompile Include="notemap.cpp">
+      <Filter>Source Files\Lib</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

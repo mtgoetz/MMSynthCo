@@ -1,5 +1,9 @@
 #include "MM_ADSR.h"
 
+bool MM_ADSR::initialized = false;
+int MM_ADSR::attackTable[ADSR_TABLE_SIZE];
+int MM_ADSR::decayReleaseTable[ADSR_TABLE_SIZE];
+
 void MM_ADSR::init(uint8_t outAddr)	//default with output address
 {
 	init(100000, 40000, 25000, 500000, outAddr, MAX_DRIVE, false, false);
@@ -24,32 +28,43 @@ void MM_ADSR::init(unsigned long attack, unsigned long decay, int sustain, unsig
 	this->dacAddr = outAddr;			//max output to a dac.
 	this->output = 0;
 	this->loopMode = loopMode;
-	this->inverted = invert;	
+	this->inverted = invert;
 
-	for (int i = 0; i < ADSR_TABLE_SIZE; i++) {												// Create look-up table for Attack
-		attackTable[i] = i;
-		decayReleaseTable[i] = MAX_DRIVE - i;
-	}
+	//return;
 
-	for (int i = 0; i < ADSR_TABLE_SIZE - 1; i++) {											// Create look-up table for Decay
-		attackTable[i + 1] = (1.0 - ATTACK_ALPHA) * (MAX_DRIVE) + ATTACK_ALPHA * attackTable[i];
-		decayReleaseTable[i + 1] = ATTACK_DECAY_RELEASE * decayReleaseTable[i];
-	}
+	//todo -> make static
 
-	for (int i = 0; i < ADSR_TABLE_SIZE; i++) {												// normalize table to min and max
-		attackTable[i] = map(
-			attackTable[i] / 10,
-			0, 
-			attackTable[ADSR_TABLE_SIZE - 1] / 10,
-			0, 
-			MAX_DRIVE);
+	if (!MM_ADSR::initialized) {
 
-		decayReleaseTable[i] = map(
-			decayReleaseTable[i] / 10,
-			decayReleaseTable[ADSR_TABLE_SIZE - 1] / 10,
-			decayReleaseTable[0] / 10,
-			0,
-			MAX_DRIVE);
+		for (int i = 0; i < ADSR_TABLE_SIZE; i++) {												// Create look-up table for Attack
+			MM_ADSR::attackTable[i] = i;
+			MM_ADSR::decayReleaseTable[i] = MAX_DRIVE - i;
+		}
+
+		for (int i = 0; i < ADSR_TABLE_SIZE - 1; i++) {											// Create look-up table for Decay
+			MM_ADSR::attackTable[i + 1] = (1.0 - ATTACK_ALPHA) * (MAX_DRIVE)+ATTACK_ALPHA * MM_ADSR::attackTable[i];
+			MM_ADSR::decayReleaseTable[i + 1] = ATTACK_DECAY_RELEASE * MM_ADSR::decayReleaseTable[i];
+		}
+
+		//return;
+
+		for (int i = 0; i < ADSR_TABLE_SIZE; i++) {												// normalize table to min and max
+			MM_ADSR::attackTable[i] = map(
+				MM_ADSR::attackTable[i] / 10,
+				0,
+				MM_ADSR::attackTable[ADSR_TABLE_SIZE - 1] / 10,
+				0,
+				MAX_DRIVE);
+
+			MM_ADSR::decayReleaseTable[i] = map(
+				MM_ADSR::decayReleaseTable[i] / 10,
+				MM_ADSR::decayReleaseTable[ADSR_TABLE_SIZE - 1] / 10,
+				MM_ADSR::decayReleaseTable[0] / 10,
+				0,
+				MAX_DRIVE);
+		}
+
+		MM_ADSR::initialized = true;
 	}
 }
 
@@ -62,7 +77,7 @@ int MM_ADSR::next(unsigned long micros)
 		if (delta < attack) {									// Attack
 			if (this->attackStart > this->gain) this->attackStart = this->gain;
 			this->output = (uint16_t)map(
-				attackTable[(int)floor(ADSR_TABLE_SIZE * (float)delta / (float)attack)], 0, MAX_DRIVE, this->attackStart, this->gain);
+				MM_ADSR::attackTable[(int)floor(ADSR_TABLE_SIZE * (float)delta / (float)attack)], 0, MAX_DRIVE, this->attackStart, this->gain);
 		}
 		else if (delta < attack + decay) { // Decay
 
@@ -73,7 +88,7 @@ int MM_ADSR::next(unsigned long micros)
 			delta = micros - this->noteOnMicros - attack;
 
 			this->output = (uint16_t)map(
-					decayReleaseTable[(int)floor(ADSR_TABLE_SIZE * (float)delta / (float)decay)], 0, MAX_DRIVE, sustain, this->decayStart);
+				MM_ADSR::decayReleaseTable[(int)floor(ADSR_TABLE_SIZE * (float)delta / (float)decay)], 0, MAX_DRIVE, sustain, this->decayStart);
 		}
 		else
 			this->output = this->sustain;
@@ -82,7 +97,7 @@ int MM_ADSR::next(unsigned long micros)
 		delta = micros - this->noteOffMicros;
 		if (delta < release) {								// release
 			this->output = (uint16_t)map(
-				decayReleaseTable[(int)floor(ADSR_TABLE_SIZE * (float)delta / (float)release)], 0, MAX_DRIVE, 0, releaseStart);
+				MM_ADSR::decayReleaseTable[(int)floor(ADSR_TABLE_SIZE * (float)delta / (float)release)], 0, MAX_DRIVE, 0, releaseStart);
 		}
 		else
 			this->output = 0;									// note off
@@ -93,7 +108,7 @@ int MM_ADSR::next(unsigned long micros)
 	return this->output;
 }
 
-volatile void MM_ADSR::noteOn(uint8_t channel, uint8_t pitch, uint8_t velocity)
+void MM_ADSR::noteOn(uint8_t channel, uint8_t pitch, uint8_t velocity)
 {
 	//could do something with velocity here
 	this->noteOn(micros());

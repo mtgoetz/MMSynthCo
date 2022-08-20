@@ -15,8 +15,9 @@
 class MM_ADSR : virtual public Modulator
 {
 private:
-	int attackTable[ADSR_TABLE_SIZE];
-	int decayReleaseTable[ADSR_TABLE_SIZE];
+	static int attackTable[ADSR_TABLE_SIZE];
+	static int decayReleaseTable[ADSR_TABLE_SIZE];
+	static bool initialized;
 
 	bool loopMode = false;
 	bool inverted = false;
@@ -65,7 +66,7 @@ public:
 
 	//Modulator method declarations
 	int next(unsigned long micros);
-	virtual volatile void noteOn(uint8_t channel, uint8_t pitch, uint8_t velocity);
+	virtual void noteOn(uint8_t channel, uint8_t pitch, uint8_t velocity);
 	virtual void noteOff(uint8_t channel, uint8_t pitch, uint8_t velocity);
 	void control1(int amt);
 	void control2(int amt);

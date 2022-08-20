@@ -56,7 +56,7 @@ int MM_Note::next(unsigned long micros) {	//todo: micros ignored for now...prob 
 	return val;
 }
 
-volatile void MM_Note::noteOn(uint8_t channel, uint8_t pitch, uint8_t velocity) {
+void MM_Note::noteOn(uint8_t channel, uint8_t pitch, uint8_t velocity) {
 	this->themap.noteOn(pitch);
 }
 

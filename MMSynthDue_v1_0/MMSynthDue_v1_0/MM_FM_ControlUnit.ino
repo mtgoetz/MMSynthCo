@@ -1,9 +1,11 @@
-#define main
+//#define main	//no longer used?
 #define mod_test
 //#define controls_test	//for now use with mod_test
 //#define midi
 //#define midi_test
 //#define dactest
+#define disableControls
+#define debugInitOnScreen
 
 
 #include <SPI.h>
@@ -22,7 +24,7 @@
 #include "Constants.h"
 #include "MM_Utils.h"
 
-bool doUpdate = false;
+bool doUpdate = false;	//todo not used?
 bool inMenu = false;
 bool inChangeMod = false; //have pressed shift + turned control 8
 bool changeModTickUp = false;	//require 2 ticks/update
@@ -134,6 +136,10 @@ int encoderFourOutput = 0;
 bool pressed = false;
 #endif
 
+#ifdef dactest
+int testOutput = 0;
+#endif
+
 
 void dacSetup() {
 
@@ -179,6 +185,8 @@ void writeTo(uint8_t n, volatile int val, bool do_final) {
 }
 
 void readInputs() {
+#ifndef disableControls
+
 	bool menuPressed = buttonMenu->pressed();
 
 	if (menuPressed && !inMenu) {
@@ -254,6 +262,8 @@ void readInputs() {
 		inFocusModulator->control4(encoderFour->getUpdate());
 	}
 
+#endif // !disableControls
+
 #ifdef mod_test
 	adsrReadInputs();
 #endif
@@ -270,6 +280,7 @@ void update() {
 	doUpdate = true;
 }
 
+#ifndef dactest
 void updateOutputs() {
 #ifndef controls_test
 	readInputs();
@@ -294,6 +305,7 @@ void updateOutputs() {
 	//screen->blank();
 	screen->draw();
 }
+#endif
 
 void changeModulator(int amt) {
 	if (amt > 0) {
@@ -330,7 +342,7 @@ void changeModulator(int amt) {
 
 void defaultInitialization() {
 	MM_Note *a = new MM_Note();
-	a->init(OUT_8);			//Might need to limit these - as short as possible maybe 2500
+	a->init(OUT_1);			//Might need to limit these - as short as possible maybe 2500
 
 	MM_ADSR *b = new MM_ADSR();
 	b->init(MAX_DRIVE, MAX_DRIVE, 30000, MAX_DRIVE, OUT_2);
@@ -367,6 +379,7 @@ void defaultInitialization() {
 }
 
 // the setup function runs once when you press reset or power the board
+#ifndef dactest
 void setup() {
 	pinMode(TFT_BACKLIGHT_PIN, OUTPUT);
 	digitalWrite(TFT_BACKLIGHT_PIN, LOW);
@@ -374,6 +387,7 @@ void setup() {
 	delay(100);
 
 	//initialize controls
+	//todo - put in separate function
 	encoderOne = new Encoder(RE_1_A, RE_1_B, RE_1_BUTTON);
 	encoderTwo = new Encoder(RE_2_A, RE_2_B, RE_2_BUTTON);
 	encoderThree = new Encoder(RE_3_A, RE_3_B, RE_3_BUTTON);
@@ -389,21 +403,42 @@ void setup() {
 	digitalWrite(TFT_BACKLIGHT_PIN, HIGH);
 	screen->blank();
 	delay(100);
-	//screen->draw();
 
-	if (modulators[OUT_1] == NULL) defaultInitialization();
-
-	dacSetup();
-
-	utils = new MM_Utils();
-
-	//TODO test if this is even in use
-	Timer.getAvailable().attachInterrupt(update).start(50);
-
+#ifdef debugInitOnScreen
+	screen->green();
+	delay(2000);
+#endif
 
 #ifdef mod_test
 	adsrSetup();
 #endif
+
+#ifdef debugInitOnScreen
+	screen->blue();
+	delay(3000);
+#endif
+
+	if (modulators[OUT_1] == NULL) defaultInitialization();
+
+#ifdef debugInitOnScreen
+	screen->green();
+	delay(3000);
+#endif
+
+	dacSetup();
+
+#ifdef debugInitOnScreen
+	screen->blue();
+	delay(3000);
+#endif
+
+	//utils = new MM_Utils();
+
+	//TODO test if this is even in use
+	//TODO -> use instead of loop to lighten load for midi???
+	Timer.getAvailable().attachInterrupt(update).start(50);
+
+
 #ifdef midi
 	// Initiate MIDI communications, listen to all channels
 // .begin sets the thru mode to on, so we'll have to turn it off if we don't want echo
@@ -431,6 +466,7 @@ void loop() {
 		updateOutputs();
 	//}
 }
+#endif //not dactest
 
 
 
@@ -465,8 +501,12 @@ void adsrReadInputs() {
 }
 
 void adsrSetup() {
-	//TODO: make these just constructors? try one first
-	MM_ADSR *a = new MM_ADSR();
+	
+#ifdef debugInitOnScreen
+	screen->red();
+	screen->drawText("in adsr setup\n");
+#endif
+	MM_ADSR* a = new MM_ADSR();
 	a->init(3000, 1000000, 30000, 1000000, OUT_5);		//Might need to limit these - as short as possible maybe 2500
 
 	MM_ADSR *b = new MM_ADSR();
@@ -487,8 +527,22 @@ void adsrSetup() {
 	MM_ADSR *f = new MM_ADSR();
 	f->init(100000, 100000, 55000, 10000000, OUT_6);
 
+#ifdef debugInitOnScreen
+	screen->drawText("before lfo\n");
+	delay(3000);
+#endif
+
 	MM_LFO *e = new MM_LFO();
 	e->init(OUT_1);
+
+#ifdef debugInitOnScreen
+	screen->drawText("after lfo\n");
+	delay(3000);
+
+	if (a == NULL || h == NULL) {
+		screen->drawText("problem -----------\n");
+	}
+#endif
 
 	modulators[a->getAddr()] = a;
 	modulators[b->getAddr()] = b;
@@ -499,7 +553,17 @@ void adsrSetup() {
 	modulators[g->getAddr()] = g;
 	modulators[h->getAddr()] = h;
 
+#ifdef debugInitOnScreen
+	screen->drawText("after assignments\n");
+	delay(3000);
+#endif
+
 	changeFocus(e);
+
+#ifdef debugInitOnScreen
+	screen->drawText("after change focus\n");
+	delay(3000);
+#endif
 
 	//update controls on in focus
 	//change in focus
@@ -550,16 +614,11 @@ void noteTestSetup() {
 const int button = 2;
 int buttonState = LOW;
 
-void readInputs()
-{
-
-}
-
 void updateOutputs()
 {
-	readInputs();
+	//readInputs();
 
-	if (testOutput > MAX) {
+	if (testOutput > MAX_DRIVE) {
 		testOutput = 0;
 	}
 	for (int i = 0; i < 7; i++) {

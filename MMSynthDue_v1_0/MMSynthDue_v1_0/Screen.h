@@ -34,4 +34,7 @@ public:
 	void draw();
 	void blank();
 	void green();
+	void blue();
+	void red();
+	void drawText(const char* text);
 };
