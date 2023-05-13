@@ -1,7 +1,11 @@
 #pragma once
-#include <Adafruit_GFX.h>
-#include <Fonts/FreeSans12pt7b.h>
-#include <Fonts/FreeSans18pt7b.h>
+//#include <Adafruit_GFX.h>
+//#include <Fonts/FreeSans12pt7b.h>
+//#include <Fonts/FreeSans12pt7b.h>
+//#include <Fonts/FreeSans18pt7b.h>
+//#include <gfxfont.h>
+//#include <Fonts/FreeMono12pt7b.h>
+//#include "ILI9341_t3.h"
 #include <Adafruit_ILI9341.h>
 #include "Controls.h"
 #include <Arduino.h>
@@ -17,7 +21,6 @@ class Screen {
 
 private:
 	Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_LCD_CS_PIN, TFT_DC_PIN); 
-	GFXcanvas1 canvas = GFXcanvas1(320, 240);
 	uint16_t buffer[SCREEN_WIDTH * SCREEN_HEIGHT];
 	int param1X = floor(SCREEN_WIDTH * 0.15);
 	int param1Y = floor(SCREEN_HEIGHT * 0.75);

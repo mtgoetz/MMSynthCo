@@ -16,7 +16,8 @@ bool Button::pressed()
 		return false;
 	}
 
-	if ((millis() - this->lastDebounceTime) > debounceDelay && reading != this->buttonState) {
+	//if ((millis() - this->lastDebounceTime) > debounceDelay && reading != this->buttonState) {
+	if ((millis() - this->lastDebounceTime) > 50 && reading != this->buttonState) {
 		this->buttonState = reading;
 	}
 	this->lastReading = reading;

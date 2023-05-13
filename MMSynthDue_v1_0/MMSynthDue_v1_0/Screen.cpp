@@ -8,8 +8,9 @@ Screen::Screen()
 	}
 	tft.begin();
 	tft.setRotation(3);
-	tft.setFont(&FreeSans12pt7b);
-	//this->canvas.setFont(&FreeSans12pt7b);
+	tft.setTextSize(1);
+	tft.setFont();
+	//tft.setFont(GFXfont.)
 }
 
 void Screen::draw()
@@ -40,6 +41,8 @@ void Screen::red()
 
 void Screen::drawText(const char* text)
 {
+	//?
+	tft.write("                       ", strlen(text));
 	tft.write(text, strlen(text));
 }
 
@@ -122,9 +125,9 @@ void Screen::setAndDrawBasicData(Modulator *focus)
 	this->holdForUpdare = true;
 	this->modulator = focus;
 	this->shiftPressed = false;
-	//this->blank();
-	this->canvas.fillScreen(ILI9341_BLACK);
+	this->blank();
 	this->setTitle();
+	//tft.setFont(&FreeSans12pt7b);
 	//this->canvas.setFont(&FreeSans12pt7b);
 	this->setParams();
 	this->updateDataOneTxt();
@@ -140,31 +143,39 @@ void Screen::setAndDrawBasicData(Modulator *focus)
 void Screen::setTitle()
 {
 #ifndef controls_test | disableControls
-	this->canvas.setCursor(this->titleX, this->titleY);
+	//this->canvas.setCursor(this->titleX, this->titleY);
 	//this->canvas.setFont(&FreeSans18pt7b);
-	this->canvas.print(this->modNames[this->modulator->getType()]);
+	//this->canvas.print(this->modNames[this->modulator->getType()]);
 	//tft.println(this->modNames[this->modulator->getType()]);
+
+	tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
+	//tft.setTextSize(3);
+	//tft.setFont(&FreeSans18pt7b);
+	tft.setCursor(this->titleX, this->titleY);
+	tft.print(this->modNames[this->modulator->getType()]);
 #endif
 }
 
 void Screen::setParams()
 {
 #ifndef controls_test | disableControls
+	tft.setTextSize(2);
+
 	int paramStart = this->shiftPressed ? 4 : 0;
 
-	this->canvas.setCursor(this->textOneX, this->textOneY);
-	canvas.print(this->paramNames[this->modulator->getType()][paramStart++]);
+	this->tft.setCursor(this->textOneX, this->textOneY);
+	this->tft.print(this->paramNames[this->modulator->getType()][paramStart++]);
 
-	this->canvas.setCursor(this->textTwoX, this->textTwoY);
-	canvas.print(this->paramNames[this->modulator->getType()][paramStart++]);
+	this->tft.setCursor(this->textTwoX, this->textTwoY);
+	this->tft.print(this->paramNames[this->modulator->getType()][paramStart++]);
 
-	this->canvas.setCursor(this->textThreeX, this->textThreeY);
-	canvas.print(this->paramNames[this->modulator->getType()][paramStart++]);
+	this->tft.setCursor(this->textThreeX, this->textThreeY);
+	this->tft.print(this->paramNames[this->modulator->getType()][paramStart++]);
 
-	this->canvas.setCursor(this->textFourX, this->textFourY);
-	canvas.print(this->paramNames[this->modulator->getType()][paramStart]);
+	this->tft.setCursor(this->textFourX, this->textFourY);
+	this->tft.print(this->paramNames[this->modulator->getType()][paramStart]);
 	//canvas.print("hello");
-	if (!this->holdForUpdare) this->writeCanvas();
+	//if (!this->holdForUpdare) this->writeCanvas();
 #endif
 }
 
@@ -184,10 +195,10 @@ void Screen::updateDataOneTxt() {
 	//tft.setCursor(this->dataOneX, this->dataOneY);
 	char* buf = new char[16];
 	this->shiftPressed ? this->modulator->getControl5Val(buf) : this->modulator->getControl1Val(buf);
-	this->canvas.setCursor(this->dataOneX, this->dataOneY);
-	this->canvas.getTextBounds(buf, this->dataOneX, this->dataOneY, &this->x1, &this->y1, &this->w, &this->h);
-	this->canvas.fillRect(this->x1, this->y1, this->w, this->h, ILI9341_BLACK);
-	this->canvas.print(buf);
+	//this->canvas.setCursor(this->dataOneX, this->dataOneY);
+	//this->canvas.getTextBounds(buf, this->dataOneX, this->dataOneY, &this->x1, &this->y1, &this->w, &this->h);
+	//this->canvas.fillRect(this->x1, this->y1, this->w, this->h, ILI9341_BLACK);
+	//this->canvas.print(buf);
 	if (!this->holdForUpdare) this->writeCanvas();
 #endif
 }
@@ -197,45 +208,45 @@ void Screen::updateDataTwoTxt() {
 	//tft.setCursor(this->dataTwoX, this->dataTwoY);
 	char* buf = new char[16];
 	this->shiftPressed ? this->modulator->getControl6Val(buf) : this->modulator->getControl2Val(buf);
-	this->canvas.setCursor(this->dataTwoX, this->dataTwoY);
-	this->canvas.getTextBounds(buf, this->dataTwoX, this->dataTwoY, &this->x1, &this->y1, &this->w, &this->h);
-	this->canvas.fillRect(this->x1, this->y1, this->w, this->h, ILI9341_BLACK);
-	this->canvas.print(buf);
+	//this->canvas.setCursor(this->dataTwoX, this->dataTwoY);
+	//this->canvas.getTextBounds(buf, this->dataTwoX, this->dataTwoY, &this->x1, &this->y1, &this->w, &this->h);
+	//this->canvas.fillRect(this->x1, this->y1, this->w, this->h, ILI9341_BLACK);
 	//this->canvas.print(buf);
-	if (!this->holdForUpdare) this->writeCanvas();
+	//this->canvas.print(buf);
+	//if (!this->holdForUpdare) this->writeCanvas();
 #endif
 }
 
 void Screen::updateDataThreeTxt() {
 #ifndef controls_test | disableControls
-	this->canvas.setCursor(this->dataThreeX, this->dataThreeY);
-	char* buf = new char[16];
-	this->shiftPressed ? this->modulator->getControl7Val(buf) : this->modulator->getControl3Val(buf);
-	this->canvas.getTextBounds(buf, this->dataThreeX, this->dataThreeY, &this->x1, &this->y1, &this->w, &this->h);
-	this->canvas.fillRect(this->x1, this->y1, this->w, this->h, ILI9341_BLACK);
-	this->canvas.print(buf);
+	//this->canvas.setCursor(this->dataThreeX, this->dataThreeY);
+	//char* buf = new char[16];
+	//this->shiftPressed ? this->modulator->getControl7Val(buf) : this->modulator->getControl3Val(buf);
+	//this->canvas.getTextBounds(buf, this->dataThreeX, this->dataThreeY, &this->x1, &this->y1, &this->w, &this->h);
+	//this->canvas.fillRect(this->x1, this->y1, this->w, this->h, ILI9341_BLACK);
 	//this->canvas.print(buf);
-	if (!this->holdForUpdare) this->writeCanvas();
+	//this->canvas.print(buf);
+	//if (!this->holdForUpdare) this->writeCanvas();
 #endif
 }
 
 void Screen::updateDataFourTxt() {
 #ifndef controls_test | disableControls
-	this->canvas.setCursor(this->dataFourX, this->dataFourY);
-	char* buf = new char[16];
-	this->shiftPressed ? this->modulator->getControl8Val(buf) : this->modulator->getControl4Val(buf);
-	this->canvas.getTextBounds(buf, this->dataFourX, this->dataFourY, &this->x1, &this->y1, &this->w, &this->h);
-	this->canvas.fillRect(this->x1, this->y1, this->w, this->h, ILI9341_BLACK);
-	this->canvas.print(buf);
+	//this->canvas.setCursor(this->dataFourX, this->dataFourY);
+	//char* buf = new char[16];
+	//this->shiftPressed ? this->modulator->getControl8Val(buf) : this->modulator->getControl4Val(buf);
+	//this->canvas.getTextBounds(buf, this->dataFourX, this->dataFourY, &this->x1, &this->y1, &this->w, &this->h);
+	//this->canvas.fillRect(this->x1, this->y1, this->w, this->h, ILI9341_BLACK);
 	//this->canvas.print(buf);
-	if (!this->holdForUpdare) this->writeCanvas();
+	////this->canvas.print(buf);
+	//if (!this->holdForUpdare) this->writeCanvas();
 #endif
 }
 
 void Screen::writeCanvas()
 {
 #ifndef controls_test | disableControls
-	this->tft.drawBitmap(0, 0, this->canvas.getBuffer(), 320, 240, ILI9341_WHITE, ILI9341_BLACK);
+	//this->tft.drawBitmap(0, 0, this->canvas.getBuffer(), 320, 240, ILI9341_WHITE, ILI9341_BLACK);
 #endif
 }
 
@@ -252,7 +263,7 @@ void Screen::toggleSwitch(bool pressed)
 	if (needsUpdate) {
 		this->holdForUpdare = true;
 		//todo -> move to blank?
-		this->canvas.fillScreen(ILI9341_BLACK);
+		this->tft.fillScreen(ILI9341_BLACK);
 		this->setTitle();
 		this->setParams();
 		this->setData();

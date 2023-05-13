@@ -8,7 +8,7 @@
 //#define debugInitOnScreen
 //#define disableSreen
 //#define focusTest;	//Not working yet, or buttons aren't working + no menu action
-
+//#define protoboard
 
 #include <SPI.h>
 #include <MIDI.h>
@@ -525,6 +525,11 @@ void controlsSetup() {
 void setup() {
 	pinMode(TFT_BACKLIGHT_PIN, OUTPUT);
 	digitalWrite(TFT_BACKLIGHT_PIN, LOW);
+	pinMode(D7_R, OUTPUT);
+	pinMode(D7_G, OUTPUT);
+	digitalWrite(D7_R, HIGH);
+	digitalWrite(D7_G, HIGH);
+
 
 	delay(100);
 
@@ -778,12 +783,75 @@ void updateOutputs()
 		writeTo(i, testOutput, false);
 	}
 	writeTo(7, testOutput, true);
-	testOutput += 1;
+	testOutput += 2;
 
 }
 
 // the setup function runs once when you press reset or power the board
 void setup() {
+
+#ifndef protoboard
+	pinMode(D5_G, OUTPUT);
+	pinMode(D5_R, OUTPUT);
+	digitalWrite(D5_G, LOW);
+	digitalWrite(D5_R, LOW);
+
+	pinMode(D6_G, OUTPUT);
+	pinMode(D6_R, OUTPUT);
+	digitalWrite(D6_G, LOW);
+	digitalWrite(D6_R, LOW);
+
+	pinMode(D7_G, OUTPUT);
+	pinMode(D7_R, OUTPUT);
+	digitalWrite(D7_G, LOW);
+	digitalWrite(D7_R, LOW);
+
+	pinMode(D8_G, OUTPUT);
+	pinMode(D8_R, OUTPUT);
+	digitalWrite(D8_G, LOW);
+	digitalWrite(D8_R, LOW);
+
+	pinMode(D9_G, OUTPUT);
+	pinMode(D9_R, OUTPUT);
+	digitalWrite(D9_G, LOW);
+	digitalWrite(D9_R, LOW);
+
+	pinMode(D10_G, OUTPUT);
+	pinMode(D10_R, OUTPUT);
+	digitalWrite(D10_G, LOW);
+	digitalWrite(D10_R, LOW);
+
+	pinMode(D11_G, OUTPUT);
+	pinMode(D11_R, OUTPUT);
+	digitalWrite(D11_G, LOW);
+	digitalWrite(D11_R, LOW);
+
+	pinMode(D11_G, OUTPUT);
+	pinMode(D11_R, OUTPUT);
+	digitalWrite(D11_G, LOW);
+	digitalWrite(D11_R, LOW);
+
+	pinMode(D12_G, OUTPUT);
+	pinMode(D12_R, OUTPUT);
+	digitalWrite(D12_G, LOW);
+	digitalWrite(D12_R, LOW);
+
+	//TODO: pwm - need lower value
+	pinMode(D2_B, OUTPUT);
+	pinMode(D2_G, OUTPUT);
+	pinMode(D2_R, OUTPUT);
+	digitalWrite(D2_B, LOW);
+	digitalWrite(D2_G, LOW);
+	digitalWrite(D2_R, LOW);
+
+	pinMode(D3_B, OUTPUT);
+	pinMode(D3_G, OUTPUT);
+	pinMode(D3_R, OUTPUT);
+	digitalWrite(D3_B, LOW);
+	digitalWrite(D3_G, LOW);
+	digitalWrite(D3_R, LOW);
+
+#endif
 
 	dacSetup();
 	testOutput = 0;
