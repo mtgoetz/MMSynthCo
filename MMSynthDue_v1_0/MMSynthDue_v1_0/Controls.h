@@ -2,8 +2,8 @@
 #include <Arduino.h>
 
 //assume 100 ticks
-#define ENCODER_BASE_ADJ 1
-#define ENCODER_PRESSED_MULT 5
+#define ENCODER_BASE_ADJ 10
+#define ENCODER_PRESSED_MULT 3
 
 #define RE_1_A 36
 #define RE_1_BUTTON 37
@@ -21,12 +21,14 @@
 #define RE_4_B 47
 #define RE_4_BUTTON 46
 
-#define BUTTON_SHIFT 49
+#define BUTTON_SHIFT 49   //on prototype
+//#define BUTTON_SHIFT 48
 #define BUTTON_1 50
 #define BUTTON_2 51
 #define BUTTON_3 52
 #define BUTTON_4 53
-#define BUTTON_MENU 35
+#define BUTTON_MENU 35    //on prototype
+//#define BUTTON_MENU 22
 
 #define TFT_DC_PIN 13
 #define TFT_SD_CS_PIN 12
@@ -40,4 +42,4 @@
 //static int button3State = HIGH;
 //static int button4State = HIGH;
 
-const unsigned long debounceDelay = 50;
+const unsigned long debounceDelay = 40;

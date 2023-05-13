@@ -4,14 +4,15 @@ void MM_LFO::init(uint8_t outAddr) {
 	init(outAddr, 30, square);
 }
 
-void MM_LFO::init(uint8_t outAddr, unsigned int frequency, LFOShapes shape)
+//waveforms 0 -> off, 1 -> saw, 2 -> triangle, 3 -> sin, 4 -> square [0,4]
+void MM_LFO::init(uint8_t outAddr, float frequency, LFOShapes shape)
 {
 	this->thunderzLfo = new lfo(DAC_SIZE);
 	this->thunderzLfo->setWaveForm(shape);
 	this->thunderzLfo->setAmpl(MAX_DRIVE);
 	this->thunderzLfo->setAmplOffset(0);
 	this->thunderzLfo->setMode(SyncModes::free);
-	this->thunderzLfo->setMode0Freq(30);
+	this->thunderzLfo->setMode0Freq(frequency);
 	this->setClockSource(ClockSources::cs_free);
 	//TODO: clean up period/frequency conversions
 	this->setAddr(outAddr);
@@ -79,8 +80,16 @@ void MM_LFO::setClockSource(ClockSources source) {
 	this->clockSource = source;
 }
 
-int MM_LFO::getClockSource() {
-	return this->clockSource;
+String MM_LFO::getClockSource() {
+	switch (this->clockSource) {
+	case cs_free:
+		return "free";
+	case cs_internal:
+		return "internal";
+	case cs_external:
+		return "external";
+	}
+	return "";
 }
 
 ModulatorTypes MM_LFO::getType() {
@@ -88,7 +97,7 @@ ModulatorTypes MM_LFO::getType() {
 }
 
 //Frequency - make subdivistion enum with rate conversion
-void MM_LFO::control1(int amt) {
+bool MM_LFO::control1(int amt) {
 	if (amt != 0) {
 		//todo handle global clock and external -> if so this is always a subdivision of global clock
 		//if midi do subdivision -> will have to change what is displayed
@@ -102,18 +111,20 @@ void MM_LFO::control1(int amt) {
 		else {
 			//external - do subdivision
 		}
+		return true;
 	}
+	return false;
 }
 
 //Shape - does not wrap
-void MM_LFO::control2(int amt) {
+bool MM_LFO::control2(int amt) {
 	//shouldn't need this if already debouncing - todo remove
 	//if (!this->shapeTick && amt != 0) {
 	//	this->shapeTick = true;
 	//	return;
 	//}
 	if (amt > 0) {
-		int current = (int)this->currentShape;
+		int current = (int) this->currentShape;
 		if (current < (LFOShapes::size - 1)) {
 			this->currentShape = (LFOShapes)current++;
 		}
@@ -128,14 +139,18 @@ void MM_LFO::control2(int amt) {
 
 		//this->shapeTick = false;
 	}
+	else {
+		return false;
+	}
 	this->thunderzLfo->setWaveForm(this->currentShape);
+	return true;
 }
 
 //Clock source - Make enum (free, internal, external)
-void MM_LFO::control3(int amt) {
+bool MM_LFO::control3(int amt) {
 	if (amt > 0) {
 		int current = (int)this->clockSource;
-		if (current < (ClockSources::size - 1)) {
+		if (current < (ClockSources::cs_size - 1)) {
 			this->clockSource = (ClockSources)current++;
 		}
 	}
@@ -144,40 +159,49 @@ void MM_LFO::control3(int amt) {
 		if (current > 0) {
 			this->clockSource = (ClockSources)current--;
 		}
+	} else {
+		return false;
 	}
+	return true;
 }
 
 //Retrigger Mode
-void MM_LFO::control4(int amt) {
+bool MM_LFO::control4(int amt) {
 	//might want to hang on these types of controls before committing to new value ***
 	//make these methods return bool whether or not they're a wait to trigger control...
+	if (amt == 0) return false;
 	this->retriggerMode = !this->retriggerMode;
+	return true;
 }
 
 //amplitude
-void MM_LFO::control5(int amt) {
+bool MM_LFO::control5(int amt) {
+	if (amt == 0) return false;
 	int newAmplitude = this->thunderzLfo->getAmpl() + amt;
 	if (newAmplitude < 0) newAmplitude = 0;
 	if (newAmplitude > MAX_DRIVE) newAmplitude = MAX_DRIVE;
 	this->thunderzLfo->setAmpl(newAmplitude);
+	return true;
 }
 
 //ampl offset
-void MM_LFO::control6(int amt) {
+bool MM_LFO::control6(int amt) {
+	if (amt == 0) return false;
 	int newOffset = this->thunderzLfo->getAmplOffset() + amt;
 	if (newOffset < 0) newOffset = 0;
 	if (newOffset > (this->thunderzLfo->getAmpl())) newOffset = this->thunderzLfo->getAmpl();
 	this->thunderzLfo->setAmplOffset(newOffset);
+	return true;
 }
 
 //None
-void MM_LFO::control7(int amt) {
-
+bool MM_LFO::control7(int amt) {
+	return false;
 }
 
 //nix
-void MM_LFO::control8(int amt) {
-
+bool MM_LFO::control8(int amt) {
+	return false;
 }
 
 int MM_LFO::getAddr() {
@@ -228,4 +252,52 @@ void MM_LFO::setFrequency(float frequency)
 	this->frequency = frequency;
 	this->thunderzLfo->setMode0Freq(frequency);
 	this->thunderzLfo->setMode1Bpm(bpm);
+}
+
+//std::string MM_LFO::getControl1Name() {
+//	return "Frequency";
+//}
+//std::string MM_LFO::getControl2Name() {
+//	return "Shape";
+//}
+//std::string MM_LFO::getControl3Name() {
+//	return "Clock Src";
+//}
+//std::string MM_LFO::getControl4Name() {
+//	return "Retrig Mode";
+//}
+//std::string MM_LFO::getControl5Name() {
+//	return "Amplitude";
+//}
+//std::string MM_LFO::getControl6Name() {
+//	return "Amp Offset";
+//}
+//std::string MM_LFO::getControl7Name() {
+//	return "";
+//}
+//String getControl8Name();
+
+void MM_LFO::getControl1Val(char* buffer) {
+	strcpy(buffer, String(this->bpm).c_str());
+}
+void MM_LFO::getControl2Val(char* buffer) {
+	strcpy(buffer, this->getShape().c_str());
+}
+void MM_LFO::getControl3Val(char* buffer) {
+	strcpy(buffer, this->getClockSource().c_str());
+}
+void MM_LFO::getControl4Val(char* buffer) {
+	strcpy(buffer, "rt mode");
+}
+void MM_LFO::getControl5Val(char* buffer) {
+	strcpy(buffer, "ampl");;
+}
+void MM_LFO::getControl6Val(char* buffer) {
+	strcpy(buffer, "amp ofs");
+}
+void MM_LFO::getControl7Val(char* buffer) {
+	strcpy(buffer, "");
+}
+void MM_LFO::getControl8Val(char* buffer) {
+	strcpy(buffer, "LFO");
 }

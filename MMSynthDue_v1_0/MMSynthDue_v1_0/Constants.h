@@ -19,4 +19,4 @@ const uint8_t OUT_8 = 7;
 const int slaveSelectPin = 9;
 
 //TODO rename
-enum ClockSources { cs_free, cs_internal, cs_external, size };
+enum ClockSources { cs_free, cs_internal, cs_external, cs_size };

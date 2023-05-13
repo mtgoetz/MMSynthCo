@@ -1,11 +1,13 @@
 //#define main	//no longer used?
-#define mod_test
-//#define controls_test	//for now use with mod_test
+//#define mod_test
+#define controls_test //!!!!Must be used with diableControls
 //#define midi
 //#define midi_test
 //#define dactest
 #define disableControls
-#define debugInitOnScreen
+//#define debugInitOnScreen
+//#define disableSreen
+//#define focusTest;	//Not working yet, or buttons aren't working + no menu action
 
 
 #include <SPI.h>
@@ -30,9 +32,9 @@ bool inChangeMod = false; //have pressed shift + turned control 8
 bool changeModTickUp = false;	//require 2 ticks/update
 bool changeModTickDown = false;	//require 2 ticks/update
 
-ModulatorTypes newModulator;	//current selected modulator
+ModulatorTypes newModulator;		//new selection to be initiated
 Modulator *modulators[NUM_OUTPUTS];
-Modulator *inFocusModulator;
+Modulator *inFocusModulator;		//current selected modulator
 
 Encoder *encoderOne;
 Encoder *encoderTwo;
@@ -125,6 +127,7 @@ unsigned long   t = 0;                              // timestamp: current time
 unsigned long   t_0 = 0;
 unsigned long   trigger_duration = 5000000;          // time in µs
 unsigned long   space_between_triggers = 4500000;    // time in µs
+uint8_t screenCount = 0;
 #endif
 
 #ifdef controls_test
@@ -133,7 +136,12 @@ int encoderOneOutput = 0;
 int encoderTwoOutput = 0;
 int encoderThreeOutput = 0;
 int encoderFourOutput = 0;
-bool pressed = false;
+bool menuPressed = false;
+bool shiftPressed = false;
+bool onePressed = false;
+bool twoPressed = false;
+bool threePressed = false;
+bool fourPressed = false;
 #endif
 
 #ifdef dactest
@@ -151,13 +159,15 @@ void dacSetup() {
 	SPI.setDataMode(SPI_MODE0);
 
 	uint8_t cmd = SELECT_EXT_REF;
-	noInterrupts();
+
+	//todo: make sure this doesn't cause problems
+	//noInterrupts();
 	digitalWrite(slaveSelectPin, LOW);
 	SPI.transfer(cmd);
 	SPI.transfer(0x00);
 	SPI.transfer(0x00);
 	digitalWrite(slaveSelectPin, HIGH);
-	interrupts();
+	//interrupts();
 }
 
 void writeTo(uint8_t n, volatile int val, bool do_final) {
@@ -197,6 +207,11 @@ void readInputs() {
 		inMenu = false;
 	} else if (buttonShift->pressed()) {
 		//shift
+#ifdef focusTest
+		screen->changeFocusTest(true);
+#endif
+
+		screen->toggleSwitch(true);
 
 		if (button1->pressed()) {
 			changeFocus(modulators[OUT_5]);
@@ -210,13 +225,23 @@ void readInputs() {
 		else if (button4->pressed()) {
 			changeFocus(modulators[OUT_8]);
 		}
+		else {	//only try to do one thing at a time
 
-		inFocusModulator->control5(encoderOne->getUpdate());
-		inFocusModulator->control6(encoderTwo->getUpdate());
-		inFocusModulator->control7(encoderThree->getUpdate());
+			//todo: fix this now
+			if (inFocusModulator->control5(encoderOne->getUpdate())) {
+				screen->updateDataOneTxt();
+			}
+			if (inFocusModulator->control6(encoderTwo->getUpdate())) {
+				screen->updateDataTwoTxt();
+			}
+			if (inFocusModulator->control7(encoderThree->getUpdate())) {
+				screen->updateDataThreeTxt();
+			}
 
-		changeModulator(encoderFour->getUpdate());
-		//inFocusModulator->control8(encoderFour->getUpdate());
+			//TODO: make the display show what the selection will be and do the update when shift is released
+			changeModulator(encoderFour->getUpdate());
+			//inFocusModulator->control8(encoderFour->getUpdate());
+		}
 
 	} else {
 		if (inChangeMod) {
@@ -242,6 +267,10 @@ void readInputs() {
 			changeModTickUp = false;
 		}
 		//No shift
+#ifdef focusTest
+		screen->changeFocusTest(false);
+#endif
+		screen->toggleSwitch(false);
 
 		if (button1->pressed()) {
 			changeFocus(modulators[OUT_1]);
@@ -255,17 +284,27 @@ void readInputs() {
 		else if (button4->pressed()) {
 			changeFocus(modulators[OUT_4]);
 		}
-
-		inFocusModulator->control1(encoderOne->getUpdate());
-		inFocusModulator->control2(encoderTwo->getUpdate());
-		inFocusModulator->control3(encoderThree->getUpdate());
-		inFocusModulator->control4(encoderFour->getUpdate());
+		else {
+			//todo: consider only allowing one update here...maybe using a boolean for each control to return?
+			if (inFocusModulator->control1(encoderOne->getUpdate())) {
+				screen->updateDataOneTxt();
+			}
+			if (inFocusModulator->control2(encoderTwo->getUpdate())) {
+				screen->updateDataTwoTxt();
+			}
+			if (inFocusModulator->control3(encoderThree->getUpdate())) {
+				screen->updateDataThreeTxt();
+			}
+			if (inFocusModulator->control4(encoderFour->getUpdate())) {
+				screen->updateDataFourTxt();
+			}
+		}
 	}
 
 #endif // !disableControls
 
 #ifdef mod_test
-	adsrReadInputs();
+	simulateNoteOnOff();
 #endif
 
 }
@@ -273,6 +312,11 @@ void readInputs() {
 void changeFocus(Modulator *modulator) {
 	inFocusModulator = modulator;
 	newModulator = inFocusModulator->getType();		//track starting point for change sequence
+	screen->setAndDrawBasicData(inFocusModulator);
+
+#ifdef focusTest
+	screen->changeFocusTest(inFocusModulator->getAddr());
+#endif
 }
 
 //Is this still a thing?????
@@ -283,7 +327,6 @@ void update() {
 #ifndef dactest
 void updateOutputs() {
 #ifndef controls_test
-	readInputs();
 
 	unsigned long microSeconds = micros();
 
@@ -298,14 +341,15 @@ void updateOutputs() {
 	writeTo(OUT_7, 39321, false);
 	writeTo(OUT_8, 65535, true);*/
 
+#if !defined(disableSreen) && !defined(focusTest)
+	//screen->blank();
+	//screen->draw();
+#endif // !disableSreen
 #else
 	doControlsTest();
 #endif // !controls_test
-
-	//screen->blank();
-	screen->draw();
 }
-#endif
+#endif //dactest
 
 void changeModulator(int amt) {
 	if (amt > 0) {
@@ -316,6 +360,7 @@ void changeModulator(int amt) {
 
 			changeModTickUp = false;
 
+			//Needed because we are not wrapping around and do not update every time this happens.
 			inChangeMod = newModulator != inFocusModulator->getType();
 		}
 		else {
@@ -353,8 +398,8 @@ void defaultInitialization() {
 	MM_ADSR *d = new MM_ADSR();
 	d->init(500000, 1000000, 50000, 2500000, OUT_4);
 
-	MM_ADSR *h = new MM_ADSR();
-	h->init(1000000, 1000000, 55000, 8000000, OUT_8);
+	MM_ADSR *e = new MM_ADSR();
+	e->init(1000000, 1000000, 55000, 8000000, OUT_5);
 
 	MM_ADSR *g = new MM_ADSR();
 	g->init(4000000, 700000, 25000, 200000, OUT_7);
@@ -363,8 +408,8 @@ void defaultInitialization() {
 	f->init(100000, 100000, 55000, 10000000, OUT_6);
 
 	//LFO on end
-	MM_LFO *e = new MM_LFO();
-	e->init(OUT_5);
+	MM_LFO *h = new MM_LFO();
+	h->init(OUT_8);
 
 	modulators[a->getAddr()] = a;
 	modulators[b->getAddr()] = b;
@@ -410,7 +455,7 @@ void setup() {
 #endif
 
 #ifdef mod_test
-	adsrSetup();
+	modTestSetup();
 #endif
 
 #ifdef debugInitOnScreen
@@ -418,7 +463,10 @@ void setup() {
 	delay(3000);
 #endif
 
+	//loads every time for now until load from storage
 	if (modulators[OUT_1] == NULL) defaultInitialization();
+
+	screen->setAndDrawBasicData(inFocusModulator);
 
 #ifdef debugInitOnScreen
 	screen->green();
@@ -432,11 +480,16 @@ void setup() {
 	delay(3000);
 #endif
 
+//#ifdef controls_test
+//	screen->controlsTestLabels();
+//#endif
+
 	//utils = new MM_Utils();
 
 	//TODO test if this is even in use
 	//TODO -> use instead of loop to lighten load for midi???
-	Timer.getAvailable().attachInterrupt(update).start(50);
+	//Timer.getAvailable().attachInterrupt(update).start(50);
+	Timer.getAvailable().attachInterrupt(update).start(100000);	//10/second for screen update, consider queuing up screen updates?
 
 
 #ifdef midi
@@ -462,9 +515,15 @@ void loop() {
 #ifdef midi
 	MIDI.read();
 #endif
-	//if (doUpdate) {
+	if (doUpdate) {
+		readInputs();
 		updateOutputs();
-	//}
+
+#ifndef controls_test
+		//screen->draw();
+#endif
+		doUpdate = false;
+	}
 }
 #endif //not dactest
 
@@ -472,7 +531,7 @@ void loop() {
 
 //Testing functions
 #ifdef mod_test
-void adsrReadInputs() {
+void simulateNoteOnOff() {
 	t = micros();
 
 	if (trigger_on) {
@@ -498,42 +557,49 @@ void adsrReadInputs() {
 			trigger_on = true;                            // set trigger_on to false
 		}
 	}
+
+	//if (screenCount == 2) {
+	//	screen->draw();
+	//	screenCount = 0;
+	//}
+	//screenCount++;
 }
 
-void adsrSetup() {
+void modTestSetup() {
 	
 #ifdef debugInitOnScreen
 	screen->red();
 	screen->drawText("in adsr setup\n");
 #endif
-	MM_ADSR* a = new MM_ADSR();
-	a->init(3000, 1000000, 30000, 1000000, OUT_5);		//Might need to limit these - as short as possible maybe 2500
 
-	MM_ADSR *b = new MM_ADSR();
-	b->init(MAX_DRIVE, MAX_DRIVE, 30000, MAX_DRIVE, OUT_2);
+	MM_ADSR *e = new MM_ADSR();
+	e->init(MAX_DRIVE, MAX_DRIVE, 30000, MAX_DRIVE, OUT_5);
 
-	MM_ADSR *c = new MM_ADSR();
-	c->init(2000000, 1000000, 40000, 5000000, OUT_3);
-
-	MM_ADSR *d = new MM_ADSR();
-	d->init(500000, 1000000, 50000, 2500000, OUT_4);
-
-	MM_ADSR *h = new MM_ADSR();
-	h->init(1000000, 1000000, 55000, 8000000, OUT_8);
+	MM_ADSR *f= new MM_ADSR();
+	f->init(2000000, 1000000, 40000, 5000000, OUT_6);
 
 	MM_ADSR *g = new MM_ADSR();
 	g->init(4000000, 700000, 25000, 200000, OUT_7);
 
-	MM_ADSR *f = new MM_ADSR();
-	f->init(100000, 100000, 55000, 10000000, OUT_6);
+	MM_ADSR *h = new MM_ADSR();
+	h->init(100000, 100000, 55000, 10000000, OUT_8);
 
 #ifdef debugInitOnScreen
 	screen->drawText("before lfo\n");
 	delay(3000);
 #endif
 
-	MM_LFO *e = new MM_LFO();
-	e->init(OUT_1);
+	MM_LFO* a = new MM_LFO();
+	a->init(OUT_1, 2, LFOShapes::sine);
+
+	MM_LFO* b = new MM_LFO();
+	b->init(OUT_2, 1, LFOShapes::square);
+
+	MM_LFO* c = new MM_LFO();
+	c->init(OUT_3, 3, LFOShapes::saw);
+
+	MM_LFO* d = new MM_LFO();
+	d->init(OUT_4, 5, LFOShapes::triangle);
 
 #ifdef debugInitOnScreen
 	screen->drawText("after lfo\n");
@@ -558,7 +624,7 @@ void adsrSetup() {
 	delay(3000);
 #endif
 
-	changeFocus(e);
+	changeFocus(a);
 
 #ifdef debugInitOnScreen
 	screen->drawText("after change focus\n");
@@ -648,23 +714,12 @@ void loop() {
 #ifdef controls_test
 void doControlsTest() {
 
-	if (buttonMenu->pressed() ||
-		buttonShift->pressed() ||
-		button1->pressed() ||
-		button2->pressed() ||
-		button3->pressed() ||
-		button4->pressed()) {
-
-		if (!pressed) {
-			buttonOutput += 13106;
-			if (buttonOutput > MAX_DRIVE) buttonOutput = 0;
-			writeTo(OUT_1, buttonOutput, false);
-		}
-		pressed = true;
-	}
-	else {
-		pressed = false;
-	}
+	bool menu = buttonMenu->pressed();
+	bool shift = buttonShift->pressed();
+	bool one = button1->pressed();
+	bool two = button2->pressed();
+	bool three = button3->pressed();
+	bool four = button4->pressed();
 
 	encoderOneOutput += encoderOne->getUpdate();
 	if (encoderOneOutput < 0) encoderOneOutput = 0;
@@ -672,7 +727,7 @@ void doControlsTest() {
 
 	encoderTwoOutput += encoderTwo->getUpdate();
 	if (encoderTwoOutput < 0) encoderTwoOutput = 0;
-	else if (encoderTwoOutput > MAX_DRIVE) encoderTwoOutput = MAX_DRIVE;
+	else if (encoderTwoOutput > MAX_DRIVE);
 
 	encoderThreeOutput += encoderThree->getUpdate();
 	if (encoderThreeOutput < 0) encoderThreeOutput = 0;
@@ -682,9 +737,16 @@ void doControlsTest() {
 	if (encoderFourOutput < 0) encoderFourOutput = 0;
 	else if (encoderFourOutput > MAX_DRIVE) encoderFourOutput = MAX_DRIVE;
 
-	writeTo(OUT_2, encoderOneOutput, false);
-	writeTo(OUT_3, encoderTwoOutput, false);
-	writeTo(OUT_4, encoderThreeOutput, false);
-	writeTo(OUT_5, encoderFourOutput, true);
+	if (doUpdate) {
+		screen->controlsTestUpdates(menu, shift, one, two, three, four,
+			encoderOneOutput, encoderTwoOutput, encoderThreeOutput, encoderFourOutput);
+		
+		doUpdate = false;
+	}
+
+	//writeTo(OUT_2, encoderOneOutput, false);
+	//writeTo(OUT_3, encoderTwoOutput, false);
+	//writeTo(OUT_4, encoderThreeOutput, false);
+	//writeTo(OUT_5, encoderFourOutput, true);
 }
 #endif

@@ -65,43 +65,43 @@ void MM_Note::noteOff(uint8_t channel, uint8_t pitch, uint8_t velocity) {
 }
 
 //Glide
-void MM_Note::control1(int amt) {
-
+bool MM_Note::control1(int amt) {
+	return false;
 }
 
 //Arp on/off
-void MM_Note::control2(int amt) {
-
+bool MM_Note::control2(int amt) {
+	return false;
 }
 
 //Arp type
-void MM_Note::control3(int amt) {
-
+bool MM_Note::control3(int amt) {
+	return false;
 }
 
 //Arp rate
-void MM_Note::control4(int amt) {
-
+bool MM_Note::control4(int amt) {
+	return false;
 }
 
 //Vibrato
-void MM_Note::control5(int amt) {
-
+bool MM_Note::control5(int amt) {
+	return false;
 }
 
 //Priority (global)
-void MM_Note::control6(int amt) {
-
+bool MM_Note::control6(int amt) {
+	return false;
 }
 
 //Fine tune (global) - use static volatile var
-void MM_Note::control7(int amt) {
-
+bool MM_Note::control7(int amt) {
+	return false;
 }
 
 //output type (nix from interface)
-void MM_Note::control8(int amt) {
-
+bool MM_Note::control8(int amt) {
+	return false;
 }
 
 
@@ -117,4 +117,53 @@ void MM_Note::setAddr(uint8_t addr) {
 ModulatorTypes MM_Note::getType()
 {
 	return Note;
+}
+
+
+//std::string MM_Note::getControl1Name() {
+//	return "Glide";
+//}
+//std::string MM_Note::getControl2Name() {
+//	return "Arp On/Off";
+//}
+//std::string MM_Note::getControl3Name() {
+//	return "Arp Type";
+//}
+//std::string MM_Note::getControl4Name() {
+//	return "Arp Rate";
+//}
+//std::string MM_Note::getControl5Name() {
+//	return "Vibrato";
+//}
+//std::string MM_Note::getControl6Name() {
+//	return "Priority";
+//}
+//std::string MM_Note::getControl7Name() {
+//	return "Fine Tune";
+//}
+
+
+void MM_Note::getControl1Val(char* buffer) {
+	strcpy(buffer, "glide");
+}
+void MM_Note::getControl2Val(char* buffer) {
+	strcpy(buffer, "arp");
+}
+void MM_Note::getControl3Val(char* buffer) {
+	strcpy(buffer, "arp type");
+}
+void MM_Note::getControl4Val(char* buffer) {
+	strcpy(buffer, "arp rate");
+}
+void MM_Note::getControl5Val(char* buffer) {
+	strcpy(buffer, "vibrato");
+}
+void MM_Note::getControl6Val(char* buffer) {
+	strcpy(buffer, "glb prior");
+}
+void MM_Note::getControl7Val(char* buffer) {
+	strcpy(buffer, "fine tune");
+}
+void MM_Note::getControl8Val(char* buffer) {
+	strcpy(buffer, "Note");
 }

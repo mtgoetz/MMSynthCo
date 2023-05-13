@@ -203,61 +203,120 @@ void MM_ADSR::loopModeOn()
 }
 
 //Attack
-void MM_ADSR::control1(int amt)
+bool MM_ADSR::control1(int amt)
 {
+	if (amt == 0) return false;
 	this->attack += (amt * TIME_CONTROL_MULT);
 	if (this->attack > MAX_LENGTH) this->attack = MAX_LENGTH;
 	if (this->attack < 0) this->attack = 0;
+	return true;
 }
 
 //Decay
-void MM_ADSR::control2(int amt)
+bool MM_ADSR::control2(int amt)
 {
+	if (amt == 0) return false;
 	this->decay += (amt * TIME_CONTROL_MULT);
 	if (this->decay > MAX_LENGTH) this->decay = MAX_LENGTH;
 	if (this->decay < 0) this->decay = 0;
+	return true;
 }
 
 //Sustain
-void MM_ADSR::control3(int amt)
+bool MM_ADSR::control3(int amt)
 {
+	if (amt == 0) return false;
 	this->sustain += (amt * DAC_CONTROL_MULT);
 	if (this->sustain > MAX_DRIVE) this->sustain = MAX_DRIVE;
 	if (this->sustain < 0) this->sustain = 0;
+	return true;
 }
 
 //Release
-void MM_ADSR::control4(int amt)
+bool MM_ADSR::control4(int amt)
 {
+	if (amt == 0) return false;
 	this->release += (amt * TIME_CONTROL_MULT);
 	if (this->release > MAX_LENGTH) this->release = MAX_LENGTH;
 	if (this->release < 0) this->release = 0;
+	return true;
 }
 
 //Loop mode
-void MM_ADSR::control5(int amt)
+bool MM_ADSR::control5(int amt)
 {
-
+	return false;
 }
 
 //Inverse
-void MM_ADSR::control6(int amt)
+bool MM_ADSR::control6(int amt)
 {
-
+	return false;
 }
 
 //Unused
-void MM_ADSR::control7(int amt)
+bool MM_ADSR::control7(int amt)
 {
 	//intentionally blank
+	return false;
 }
 
 
 
 //Module type --- this will be more complex: need to show on screen, need to accept only when shift
 //is released, need main code to do the work so maybe delete this control and manage from main
-void MM_ADSR::control8(int amt)
+bool MM_ADSR::control8(int amt)
 {
+	return false;
+}
 
+
+//string& MM_ADSR::getControl1Name() {
+//	return string("Attack");
+//}
+//std::string MM_ADSR::getControl2Name() {
+//	return "Decay";
+//}
+//std::string MM_ADSR::getControl3Name() {
+//	return "Sustain";
+//}
+//std::string MM_ADSR::getControl4Name() {
+//	return "Release";
+//}
+//std::string MM_ADSR::getControl5Name() {
+//	return "Loop Mode";
+//}
+//std::string MM_ADSR::getControl6Name() {
+//	return "Inverse";
+//}
+//std::string MM_ADSR::getControl7Name() {
+//	return "";
+//}
+//String getControl8Name();
+
+
+void MM_ADSR::getControl1Val(char* buffer) {
+	strcpy(buffer, String(this->attack).c_str());
+}
+void MM_ADSR::getControl2Val(char* buffer) {
+	strcpy(buffer, String(this->decay).c_str());
+}
+void MM_ADSR::getControl3Val(char* buffer) {
+	strcpy(buffer, String(this->sustain).c_str());
+}
+void MM_ADSR::getControl4Val(char* buffer) {
+	strcpy(buffer, String(this->release).c_str());
+}
+void MM_ADSR::getControl5Val(char* buffer) {
+	strcpy(buffer, this->loopMode ? "On" : "Off");
+}
+void MM_ADSR::getControl6Val(char* buffer) {
+	strcpy(buffer, this->inverted ? "On" : "Off");
+}
+void MM_ADSR::getControl7Val(char* buffer) {
+	strcpy(buffer, "");
+}
+void MM_ADSR::getControl8Val(char* buffer) {
+	strcpy(buffer, "ADSR");
 }
 

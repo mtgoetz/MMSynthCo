@@ -4,6 +4,9 @@
 #include <Arduino.h>
 #include "Controls.h"
 #include "Constants.h"
+#include <string>
+
+using namespace std;
 
 #define ADSR_TABLE_SIZE 1024			// number of time points
 #define ATTACK_ALPHA 0.995				// varies between 0.9 (steep curve) and 0.9995 (straight line)
@@ -68,15 +71,33 @@ public:
 	int next(unsigned long micros);
 	virtual void noteOn(uint8_t channel, uint8_t pitch, uint8_t velocity);
 	virtual void noteOff(uint8_t channel, uint8_t pitch, uint8_t velocity);
-	void control1(int amt);
-	void control2(int amt);
-	void control3(int amt);
-	void control4(int amt);
-	void control8(int amt);
-	void control5(int amt);
-	void control6(int amt);
-	void control7(int amt);
+	bool control1(int amt);
+	bool control2(int amt);
+	bool control3(int amt);
+	bool control4(int amt);
+	bool control8(int amt);
+	bool control5(int amt);
+	bool control6(int amt);
+	bool control7(int amt);
 	int getAddr();
 	void setAddr(uint8_t addr);
 	ModulatorTypes getType();
+
+	//string& getControl1Name();
+	//std::string getControl2Name();
+	//std::string getControl3Name();
+	//std::string getControl4Name();
+	//std::string getControl5Name();
+	//std::string getControl6Name();
+	//std::string getControl7Name();
+	//String getControl8Name();
+
+	void getControl1Val(char* buffer);
+	void getControl2Val(char* buffer);
+	void getControl3Val(char* buffer);
+	void getControl4Val(char* buffer);
+	void getControl5Val(char* buffer);
+	void getControl6Val(char* buffer);
+	void getControl7Val(char* buffer);
+	void getControl8Val(char* buffer);
 };

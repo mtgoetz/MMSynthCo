@@ -8,11 +8,12 @@ Button::Button(uint8_t pin)
 
 bool Button::pressed()
 {
-	bool pressed = false;
+	//bool pressed = false;
 	int reading = digitalRead(this->pin);
 
 	if (reading != this->lastReading) {
 		this->lastDebounceTime = millis();
+		return false;
 	}
 
 	if ((millis() - this->lastDebounceTime) > debounceDelay && reading != this->buttonState) {
