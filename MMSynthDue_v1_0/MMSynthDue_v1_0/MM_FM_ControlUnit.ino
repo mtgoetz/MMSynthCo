@@ -1,10 +1,10 @@
 //#define main	//no longer used?
 //#define mod_test
-#define controls_test //!!!!Must be used with diableControls
+//#define controls_test //!!!!Must be used with diableControls
 //#define midi
 //#define midi_test
 //#define dactest
-#define disableControls
+//#define disableControls
 //#define debugInitOnScreen
 //#define disableSreen
 //#define focusTest;	//Not working yet, or buttons aren't working + no menu action
@@ -16,7 +16,7 @@
 #include <Arduino.h>
 
 #include "dac_commands.h"
-#include "Encoder.h"
+//#include "Encoder.h"
 #include "Button.h"
 #include "Screen.h"
 #include "MM_LFO.h"
@@ -25,6 +25,7 @@
 #include "MM_Note.h"
 #include "Constants.h"
 #include "MM_Utils.h"
+#include <RotaryEncoder.h>
 
 bool doUpdate = false;	//todo not used?
 bool inMenu = false;
@@ -36,10 +37,22 @@ ModulatorTypes newModulator;		//new selection to be initiated
 Modulator *modulators[NUM_OUTPUTS];
 Modulator *inFocusModulator;		//current selected modulator
 
-Encoder *encoderOne;
-Encoder *encoderTwo;
-Encoder *encoderThree;
-Encoder *encoderFour;
+//Encoder *encoderOne;
+//Encoder *encoderTwo;
+//Encoder *encoderThree;
+//Encoder *encoderFour;
+
+RotaryEncoder *encoderOne;
+RotaryEncoder *encoderTwo;
+RotaryEncoder *encoderThree;
+RotaryEncoder *encoderFour;
+
+Button *encButtonOne;
+Button *encButtonTwo;
+Button *encButtonThree;
+Button *encButtonFour;
+
+//RotaryEncoder *encoderOne
 
 Button *buttonMenu;
 Button *buttonShift;
@@ -227,19 +240,39 @@ void readInputs() {
 		}
 		else {	//only try to do one thing at a time
 
-			//todo: fix this now
-			if (inFocusModulator->control5(encoderOne->getUpdate())) {
+			int update = (int) encoderOne->getDirection() * ENCODER_BASE_ADJ;
+			if (update != 0) {
+				if (encButtonOne->pressed()) update *= ENCODER_PRESSED_MULT;
+				inFocusModulator->control5(update);
 				screen->updateDataOneTxt();
 			}
-			if (inFocusModulator->control6(encoderTwo->getUpdate())) {
+
+			update = (int) encoderTwo->getDirection() * ENCODER_BASE_ADJ;
+			if (update != 0) {
+				if (encButtonTwo->pressed()) update *= ENCODER_PRESSED_MULT;
+				inFocusModulator->control6(update);
 				screen->updateDataTwoTxt();
 			}
-			if (inFocusModulator->control7(encoderThree->getUpdate())) {
+			//if (inFocusModulator->control6(encoderTwo->getUpdate())) {
+			//	screen->updateDataTwoTxt();
+			//}
+			update = (int) encoderThree->getDirection() * ENCODER_BASE_ADJ;
+			if (update != 0) {
+				if (encButtonThree->pressed()) update *= ENCODER_PRESSED_MULT;
+				inFocusModulator->control7(update);
 				screen->updateDataThreeTxt();
 			}
 
+			update = (int) encoderTwo->getDirection() * ENCODER_BASE_ADJ;
+			if (update != 0) {
+				screen->updateDataFourTxt();
+				changeModulator(update);
+			}
+			
+			//******************************************
+			//
 			//TODO: make the display show what the selection will be and do the update when shift is released
-			changeModulator(encoderFour->getUpdate());
+			//changeModulator(encoderFour->getUpdate());
 			//inFocusModulator->control8(encoderFour->getUpdate());
 		}
 
@@ -285,17 +318,33 @@ void readInputs() {
 			changeFocus(modulators[OUT_4]);
 		}
 		else {
-			//todo: consider only allowing one update here...maybe using a boolean for each control to return?
-			if (inFocusModulator->control1(encoderOne->getUpdate())) {
+			int update = (int)encoderOne->getDirection() * ENCODER_BASE_ADJ;
+			if (update != 0) {
+				if (encButtonOne->pressed()) update *= ENCODER_PRESSED_MULT;
+				inFocusModulator->control1(update);
 				screen->updateDataOneTxt();
 			}
-			if (inFocusModulator->control2(encoderTwo->getUpdate())) {
+
+			update = (int)encoderTwo->getDirection() * ENCODER_BASE_ADJ;
+			if (update != 0) {
+				if (encButtonTwo->pressed()) update *= ENCODER_PRESSED_MULT;
+				inFocusModulator->control2(update);
 				screen->updateDataTwoTxt();
 			}
-			if (inFocusModulator->control3(encoderThree->getUpdate())) {
+			//if (inFocusModulator->control6(encoderTwo->getUpdate())) {
+			//	screen->updateDataTwoTxt();
+			//}
+			update = (int)encoderThree->getDirection() * ENCODER_BASE_ADJ;
+			if (update != 0) {
+				if (encButtonThree->pressed()) update *= ENCODER_PRESSED_MULT;
+				inFocusModulator->control3(update);
 				screen->updateDataThreeTxt();
 			}
-			if (inFocusModulator->control4(encoderFour->getUpdate())) {
+
+			update = (int)encoderFour->getDirection() * ENCODER_BASE_ADJ;
+			if (update != 0) {
+				if (encButtonFour->pressed()) update *= ENCODER_PRESSED_MULT;
+				inFocusModulator->control4(update);
 				screen->updateDataFourTxt();
 			}
 		}
@@ -423,6 +472,54 @@ void defaultInitialization() {
 	changeFocus(a);
 }
 
+void enc1Callback() {
+	encoderOne->tick();
+}
+
+void enc2Callback() {
+	encoderTwo->tick();
+}
+
+void enc3Callback() {
+	encoderThree->tick();
+}
+
+void enc4Callback() {
+	encoderFour->tick();
+}
+
+void controlsSetup() {
+	//encoderOne = new Encoder(RE_1_A, RE_1_B, RE_1_BUTTON);
+//encoderTwo = new Encoder(RE_2_A, RE_2_B, RE_2_BUTTON);
+//encoderThree = new Encoder(RE_3_A, RE_3_B, RE_3_BUTTON);
+//encoderFour = new Encoder(RE_4_A, RE_4_B, RE_4_BUTTON);
+	encoderOne = new RotaryEncoder(RE_1_A, RE_1_B, RotaryEncoder::LatchMode::TWO03);
+	encoderTwo = new RotaryEncoder(RE_2_A, RE_2_B, RotaryEncoder::LatchMode::TWO03);
+	encoderThree = new RotaryEncoder(RE_3_A, RE_3_B, RotaryEncoder::LatchMode::TWO03);
+	encoderFour = new RotaryEncoder(RE_4_A, RE_4_B, RotaryEncoder::LatchMode::TWO03);
+
+	attachInterrupt(digitalPinToInterrupt(RE_1_A), enc1Callback, CHANGE);
+	attachInterrupt(digitalPinToInterrupt(RE_1_B), enc1Callback, CHANGE);
+	attachInterrupt(digitalPinToInterrupt(RE_2_A), enc2Callback, CHANGE);
+	attachInterrupt(digitalPinToInterrupt(RE_2_B), enc2Callback, CHANGE);
+	attachInterrupt(digitalPinToInterrupt(RE_3_A), enc3Callback, CHANGE);
+	attachInterrupt(digitalPinToInterrupt(RE_3_B), enc3Callback, CHANGE);
+	attachInterrupt(digitalPinToInterrupt(RE_4_A), enc4Callback, CHANGE);
+	attachInterrupt(digitalPinToInterrupt(RE_4_B), enc4Callback, CHANGE);
+
+	encButtonOne = new Button(RE_1_BUTTON);
+	encButtonTwo = new Button(RE_2_BUTTON);
+	encButtonThree = new Button(RE_3_BUTTON);
+	encButtonFour = new Button(RE_4_BUTTON);
+
+	buttonMenu = new Button(BUTTON_MENU);
+	buttonShift = new Button(BUTTON_SHIFT);
+	button1 = new Button(BUTTON_1);
+	button2 = new Button(BUTTON_2);
+	button3 = new Button(BUTTON_3);
+	button4 = new Button(BUTTON_4);
+}
+
 // the setup function runs once when you press reset or power the board
 #ifndef dactest
 void setup() {
@@ -432,17 +529,7 @@ void setup() {
 	delay(100);
 
 	//initialize controls
-	//todo - put in separate function
-	encoderOne = new Encoder(RE_1_A, RE_1_B, RE_1_BUTTON);
-	encoderTwo = new Encoder(RE_2_A, RE_2_B, RE_2_BUTTON);
-	encoderThree = new Encoder(RE_3_A, RE_3_B, RE_3_BUTTON);
-	encoderFour = new Encoder(RE_4_A, RE_4_B, RE_4_BUTTON);
-	buttonMenu = new Button(BUTTON_MENU);
-	buttonShift = new Button(BUTTON_SHIFT);
-	button1 = new Button(BUTTON_1);
-	button2 = new Button(BUTTON_2);
-	button3 = new Button(BUTTON_3);
-	button4 = new Button(BUTTON_4);
+	controlsSetup();
 
 	screen = new Screen();
 	digitalWrite(TFT_BACKLIGHT_PIN, HIGH);
@@ -710,6 +797,10 @@ void loop() {
 
 #endif
 
+int lastPos = 0;
+unsigned long lastButtonPressMillis = 0;
+bool stepOne = false;
+
 //not working?
 #ifdef controls_test
 void doControlsTest() {
@@ -721,19 +812,20 @@ void doControlsTest() {
 	bool three = button3->pressed();
 	bool four = button4->pressed();
 
-	encoderOneOutput += encoderOne->getUpdate();
+	encoderTwoOutput += (int)encoderTwo->getDirection();
 	if (encoderOneOutput < 0) encoderOneOutput = 0;
 	else if (encoderOneOutput > MAX_DRIVE) encoderOneOutput = MAX_DRIVE;
 
-	encoderTwoOutput += encoderTwo->getUpdate();
+	//encoderTwoOutput += encoderTwo->getUpdate();
+	encoderTwoOutput += (int) encoderTwo->getDirection();
 	if (encoderTwoOutput < 0) encoderTwoOutput = 0;
 	else if (encoderTwoOutput > MAX_DRIVE);
 
-	encoderThreeOutput += encoderThree->getUpdate();
+	encoderThreeOutput += (int) encoderThree->getDirection();
 	if (encoderThreeOutput < 0) encoderThreeOutput = 0;
 	else if (encoderThreeOutput > MAX_DRIVE) encoderThreeOutput = MAX_DRIVE;
 
-	encoderFourOutput += encoderFour->getUpdate();
+	encoderFourOutput += (int) encoderFour->getDirection();
 	if (encoderFourOutput < 0) encoderFourOutput = 0;
 	else if (encoderFourOutput > MAX_DRIVE) encoderFourOutput = MAX_DRIVE;
 

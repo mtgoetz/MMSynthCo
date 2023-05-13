@@ -1,5 +1,5 @@
 #include "Screen.h"
-#define controls_test
+//#define controls_test
 
 Screen::Screen()
 {
@@ -8,8 +8,8 @@ Screen::Screen()
 	}
 	tft.begin();
 	tft.setRotation(3);
-	//tft.setFont(&FreeSans12pt7b);
-	this->canvas.setFont(&FreeSans12pt7b);
+	tft.setFont(&FreeSans12pt7b);
+	//this->canvas.setFont(&FreeSans12pt7b);
 }
 
 void Screen::draw()
@@ -75,16 +75,24 @@ void Screen::controlsTestUpdates(
 	tft.print(bThree ? "ON    | " : "OFF   | ");
 	tft.print(bFour ? "ON    | " : "OFF   | ");
 
+	
 	tft.setCursor(13, 150);
-
-	tft.print(eOne, 5);
+	tft.print("     ");
+	tft.setCursor(13, 150);
+	tft.print(eOne);
 
 	tft.setCursor(58, 150);
-	tft.print(eTwo, 5);
+	tft.print("     ");
+	tft.setCursor(58, 150);
+	tft.print(eTwo);
 	tft.setCursor(103, 150);
-	tft.print(eThree, 5);
+	tft.print("     ");
+	tft.setCursor(103, 150);
+	tft.print(eThree);
 	tft.setCursor(148, 150);
-	tft.print(eFour, 5);
+	tft.print("     ");
+	tft.setCursor(148, 150);
+	tft.print(eFour);
 }
 
 void Screen::changeFocusTest(bool shiftOn)
